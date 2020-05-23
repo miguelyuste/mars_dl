@@ -6,12 +6,11 @@ import numpy as np
 import argparse
 from copy import deepcopy
 
-# params with default values
+# default params for snapshot generation
 num_snaps: int = 1000
 radius = 250
-up = r'"up": "[1.000,0.000,0.000]"'
 
-# JSON outfile header
+# JSON outfile header with default PRo3D params
 out_dict = {
     "fieldOfView": 5.47,
     "resolution": "[1024, 1024]",
@@ -115,7 +114,7 @@ if __name__ == '__main__':
         out_dict['fieldOfView'] = args.fieldofview
 
     # load object config file
-    with open("ObjectConfiguration.json") as objects_json:
+    with open("randomposegenerator/ObjectConfiguration.json") as objects_json:
         objects = json.load(objects_json)
 
     # produce snapshots and store them
