@@ -40,6 +40,7 @@ def sample_spherical(npoints, radius, obj, ndim=3):
     vec /= np.linalg.norm(vec, axis=0)
     vec *= radius
     locations = vec + np.expand_dims(obj, -1)
+    #todo: generalise this
     locations[2, :] = 162.46
     forwards = np.expand_dims(obj, -1) - locations
     return locations.T, forwards.T
@@ -54,15 +55,15 @@ def create_snapshots():
             # 1) generate snapshot without shatter cones but with scenes
             sample = deepcopy(template_snapshot)
             sample['filename'] = str(i) + "_OPCs"
-            sample['view']['forward'] = forward.tolist()
-            sample['view']['location'] = center['center']
-            sample['view']['up'] = up.tolist()
+            sample['view']['forward'] = str(forward.tolist())
+            sample['view']['location'] = str(center['center'])
+            sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
                 cone_update['opcname'] = cone['coneName']
                 # add trafo if given
                 if "coneTrafo" in cone:
-                    cone_update['trafo'] = cone['coneTrafo']
+                    cone_update['trafo'] = str(cone['coneTrafo'])
                 sample['surfaceUpdates'].append(cone_update)
             for opc in objects['opcs']:
                 opc_update = deepcopy(template_update)
@@ -73,9 +74,9 @@ def create_snapshots():
             # 2) generate snapshot with shatter cones but without scenes
             sample = deepcopy(template_snapshot)
             sample['filename'] = str(i) + "_SCs"
-            sample['view']['forward'] = forward.tolist()
-            sample['view']['location'] = center['center']
-            sample['view']['up'] = up.tolist()
+            sample['view']['forward'] = str(forward.tolist())
+            sample['view']['location'] = str(center['center'])
+            sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
                 cone_update['opcname'] = cone['coneName']
@@ -89,6 +90,7 @@ def create_snapshots():
     return snaps
 
 if __name__ == '__main__':
+    #todo: default params
     # optional argument parsing
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", help="output folder where to place the generated configuration; location of script by default")
