@@ -6,10 +6,6 @@ import numpy as np
 import argparse
 from copy import deepcopy
 
-# default params for snapshot generation
-num_snaps: int = 1000
-radius = 250
-
 # JSON outfile header with default PRo3D params
 out_dict = {
     "fieldOfView": 5.47,
@@ -18,13 +14,15 @@ out_dict = {
     "version": 0
 }
 
+up_vector = np.array([-0.733,0.675,-0.082])
+
 # structure of a single snapshot
 template_snapshot = {
     "filename": "",
     "view": {
         "forward": [],
         "location": [],
-        "up": []
+        "up": "[-0.733,0.675,-0.082]"
     },
     "surfaceUpdates": []
 }
@@ -45,7 +43,12 @@ def sample_spherical(npoints, radius, obj, ndim=3):
     #locations[2, :] = 162.46
     #locations[2, :] +=10
     forwards = np.expand_dims(obj, -1) - locations
-    forwards /= np.linalg.norm(forwards, axis=0)
+    forwards_norms = np.linalg.norm(forwards, axis=0)
+    #normalise
+    forwards /= forwards_norms
+    #make forward vectors orthogonal to up
+    forwards *= -(np.dot(up_vector, forwards)/forwards_norms*2)
+    forwards = forwards + up_vector[:,None]
     return locations.T, forwards.T
 
 def create_snapshots():
@@ -60,8 +63,8 @@ def create_snapshots():
             sample = deepcopy(template_snapshot)
             sample['filename'] = camera_prefix + str(j) + "_OPCs"
             sample['view']['forward'] = str(forward.tolist())
-            sample['view']['location'] = str(center['center'])
-            sample['view']['up'] = str(up.tolist())
+            sample['view']['location'] = str((5+up_vector+center['center']).tolist())
+            #sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
                 cone_update['opcname'] = cone['coneName']
@@ -79,8 +82,9 @@ def create_snapshots():
             sample = deepcopy(template_snapshot)
             sample['filename'] = camera_prefix + str(j) + "_SCs"
             sample['view']['forward'] = str(forward.tolist())
-            sample['view']['location'] = str(center['center'])
-            sample['view']['up'] = str(up.tolist())
+            ##################################
+            sample['view']['location'] = str((5+up_vector+center['center']).tolist())
+            #sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
                 cone_update['opcname'] = cone['coneName']
@@ -99,11 +103,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", help="output folder where to place the generated configuration; location of script by default")
     parser.add_argument("-f", "--filename", help="name of generated file; snapshot_config by default")
-    parser.add_argument("-r", "--radius", type=float, help="radius of camera circular trajectory; 250 by default")
+    parser.add_argument("-r", "--radius", type=float, help="radius of camera circular trajectory; 25 by default")
     parser.add_argument("-s", "--snaps", type=int, help="number of snapshots to generate for each center; 1000 by default")
     parser.add_argument("-res", "--resolution", help="number of snapshots to generate for each center; [1024,1024] by default")
     parser.add_argument("-fov", "--fieldofview", type=float, help="field of view; 5.47 by default")
     args = parser.parse_args()
+    # params take default values for snapshot generation
     if args.output:
         out_path = args.output
     else: out_path = "../"
@@ -112,8 +117,12 @@ if __name__ == '__main__':
     else: out_path += "/snapshots_config"
     if args.radius:
         radius = args.radius
+    else: radius = 25
     if args.snaps:
         num_snaps = args.snaps
+    else:
+        num_snaps: int = 1000
+    # todo: move setting of rs and fov here
     if args.resolution:
         out_dict['resolution'] = args.resolution
     if args.fieldofview:
@@ -137,3 +146,4 @@ if __name__ == '__main__':
     # write JSON outfile
     with open(out_path, "w+") as out_file:
         out_file.write(out_string)
+    print("JSON configuration successfully generated in target directory: {}".format(out_path))
