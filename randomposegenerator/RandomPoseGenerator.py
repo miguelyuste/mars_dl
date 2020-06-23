@@ -38,10 +38,6 @@ def sample_spherical(npoints, radius, obj, ndim=3):
     vec /= np.linalg.norm(vec, axis=0)
     vec *= radius
     locations = vec + np.expand_dims(obj, -1)
-    #todo: generalise this
-    # z position fixed to 162.46
-    #locations[2, :] = 162.46
-    #locations[2, :] +=10
     forwards = np.expand_dims(obj, -1) - locations
     forwards_norms = np.linalg.norm(forwards, axis=0)
     #normalise
@@ -58,12 +54,12 @@ def create_snapshots():
         camera_prefix = "cam" + str(i) + "_"
         # for each randomly generated point of the circumference
         loc, fwd = sample_spherical(num_snaps, radius, center['center'])
-        for j, (forward, up) in enumerate(zip(fwd, loc)):
+        for j, (forward, location) in enumerate(zip(fwd, loc)):
             # 1) generate snapshot without shatter cones but with scenes
             sample = deepcopy(template_snapshot)
             sample['filename'] = camera_prefix + str(j) + "_OPCs"
             sample['view']['forward'] = str(forward.tolist())
-            sample['view']['location'] = str((5+up_vector+center['center']).tolist())
+            sample['view']['location'] = str((location+2*up_vector).tolist())
             #sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
@@ -83,7 +79,7 @@ def create_snapshots():
             sample['filename'] = camera_prefix + str(j) + "_SCs"
             sample['view']['forward'] = str(forward.tolist())
             ##################################
-            sample['view']['location'] = str((5+up_vector+center['center']).tolist())
+            sample['view']['location'] = str((2*up_vector).tolist())
             #sample['view']['up'] = str(up.tolist())
             for cone in objects['shatterCones']:
                 cone_update = deepcopy(template_update)
