@@ -11,6 +11,7 @@ def is_empty(image):
     else:
         return False
 
+#todo: more than x % is empty
 
 def filter_empty(search_dir, output_dir):
     processed = 0
