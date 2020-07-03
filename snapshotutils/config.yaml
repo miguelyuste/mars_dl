@@ -1,0 +1,7 @@
+pro3d_path : 'C:\Users\migue\Documents\TU Graz\Asignaturas\Master Thesis\Pro3D\PRo3D 2.10.4 - Prerelease\PRo3D.Viewer.exe'
+scenes:
+  - 'StereoMosaic'
+shatter_cones:
+  - 'Terny_Crater_Ukraine_Model_1'
+camera_centers:
+  - [-2486880.90, 2288937.08, -279361.15]

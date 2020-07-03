@@ -5,6 +5,7 @@ import json
 import numpy as np
 import argparse
 from copy import deepcopy
+import yaml
 
 # JSON outfile header with default PRo3D params
 out_dict = {
@@ -55,10 +56,10 @@ def sample_spherical(npoints, radius, obj, ndim=3):
 def create_snapshots():
     snaps = []
     # generate the given number of snapshots for each camera center
-    for i, center in enumerate(objects['cameraCenters']):
+    for i, center in enumerate(objects['camera_centers']):
         camera_prefix = "cam" + str(i) + "_"
         # for each randomly generated point of the circumference
-        loc, fwd = sample_spherical(num_snaps, radius, center['center'])
+        loc, fwd = sample_spherical(num_snaps, radius, center)
         for j, (forward, location) in enumerate(zip(fwd, loc)):
             # 1) generate snapshot without shatter cones but with scenes
             sample = deepcopy(template_snapshot)
@@ -66,16 +67,16 @@ def create_snapshots():
             sample['view']['forward'] = str(forward.tolist())
             sample['view']['location'] = str((location + 2 * up_vector).tolist())
             # sample['view']['up'] = str(up.tolist())
-            for cone in objects['shatterCones']:
+            for cone in objects['shatter_cones']:
                 cone_update = deepcopy(template_update)
-                cone_update['opcname'] = cone['coneName']
+                cone_update['opcname'] = cone
                 # add trafo if given
-                if "coneTrafo" in cone:
-                    cone_update['trafo'] = str(cone['coneTrafo'])
-                sample['surfaceUpdates'].append(cone_update)
-            for opc in objects['opcs']:
+                # if "coneTrafo" in cone:
+                #     cone_update['trafo'] = str(cone['coneTrafo'])
+                # sample['surfaceUpdates'].append(cone_update)
+            for opc in objects['scenes']:
                 opc_update = deepcopy(template_update)
-                opc_update['opcname'] = opc['opcName']
+                opc_update['opcname'] = opc
                 opc_update['visible'] = True
                 sample['surfaceUpdates'].append(opc_update)
             snaps.append(deepcopy(sample))
@@ -86,14 +87,14 @@ def create_snapshots():
             ##################################
             sample['view']['location'] = str((2 * up_vector).tolist())
             # sample['view']['up'] = str(up.tolist())
-            for cone in objects['shatterCones']:
+            for cone in objects['shatter_cones']:
                 cone_update = deepcopy(template_update)
-                cone_update['opcname'] = cone['coneName']
+                cone_update['opcname'] = cone
                 cone_update['visible'] = True
                 sample['surfaceUpdates'].append(cone_update)
-            for opc in objects['opcs']:
+            for opc in objects['scenes']:
                 opc_update = deepcopy(template_update)
-                opc_update['opcname'] = opc['opcName']
+                opc_update['opcname'] = opc
                 sample['surfaceUpdates'].append(opc_update)
             snaps.append(deepcopy(sample))
     return snaps
@@ -137,8 +138,8 @@ if __name__ == '__main__':
         out_dict['fieldOfView'] = args.fieldofview
 
     # load object config file
-    with open("snapshotutils/ObjectConfiguration.json") as objects_json:
-        objects = json.load(objects_json)
+    with open('snapshotutils/config.yaml') as f:
+        objects = yaml.load(f, Loader=yaml.FullLoader)
 
     # produce snapshots and store them
     out_dict['snapshots'] = create_snapshots()
