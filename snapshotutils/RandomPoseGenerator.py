@@ -35,13 +35,16 @@ template_update = {
 
 
 def sample_spherical(npoints, radius, obj, ndim=3):
+    #generate points and normalise them
     vec = np.random.randn(ndim, npoints)
     vec /= np.linalg.norm(vec, axis=0)
+    #apply radius
     vec *= radius
+    #center points around reshaped interest point
     locations = vec + np.expand_dims(obj, -1)
+    #calculate forward vectors and normalise them
     forwards = np.expand_dims(obj, -1) - locations
     forwards_norms = np.linalg.norm(forwards, axis=0)
-    # normalise
     forwards /= forwards_norms
     # make forward vectors orthogonal to up
     forwards *= -(np.dot(up_vector, forwards) / forwards_norms * 2)
@@ -134,7 +137,7 @@ if __name__ == '__main__':
         out_dict['fieldOfView'] = args.fieldofview
 
     # load object config file
-    with open("randomposegenerator/ObjectConfiguration.json") as objects_json:
+    with open("snapshotutils/ObjectConfiguration.json") as objects_json:
         objects = json.load(objects_json)
 
     # produce snapshots and store them
