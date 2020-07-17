@@ -25,7 +25,8 @@ template_snapshot = {
         "location": [],
         "up": "[-0.733,0.675,-0.082]"
     },
-    "surfaceUpdates": []
+    #"surfaceUpdates": [],
+    "shattercones": []
 }
 
 # structure of an object update
@@ -61,41 +62,49 @@ def create_snapshots():
         # for each randomly generated point of the circumference
         loc, fwd = sample_spherical(num_snaps, radius, center)
         for j, (forward, location) in enumerate(zip(fwd, loc)):
-            # 1) generate snapshot without shatter cones but with scenes
+            #####todo: add transformation IFF present in file
             sample = deepcopy(template_snapshot)
-            sample['filename'] = camera_prefix + str(j) + "_OPCs"
             sample['view']['forward'] = str(forward.tolist())
             sample['view']['location'] = str((location + 2 * up_vector).tolist())
-            # sample['view']['up'] = str(up.tolist())
+            sample['filename'] = camera_prefix + str(j)
+            # add shatter cones with random count in interval (min, max)
             for cone in objects['shatter_cones']:
-                cone_update = deepcopy(template_update)
-                cone_update['opcname'] = cone
-                # add trafo if given
-                # if "coneTrafo" in cone:
-                #     cone_update['trafo'] = str(cone['coneTrafo'])
-                # sample['surfaceUpdates'].append(cone_update)
-            for opc in objects['scenes']:
-                opc_update = deepcopy(template_update)
-                opc_update['opcname'] = opc
-                opc_update['visible'] = True
-                sample['surfaceUpdates'].append(opc_update)
-            snaps.append(deepcopy(sample))
-            # 2) generate snapshot with shatter cones but without scenes
-            sample = deepcopy(template_snapshot)
-            sample['filename'] = camera_prefix + str(j) + "_SCs"
-            sample['view']['forward'] = str(forward.tolist())
-            ##################################
-            sample['view']['location'] = str((2 * up_vector).tolist())
-            # sample['view']['up'] = str(up.tolist())
-            for cone in objects['shatter_cones']:
-                cone_update = deepcopy(template_update)
-                cone_update['opcname'] = cone
-                cone_update['visible'] = True
-                sample['surfaceUpdates'].append(cone_update)
-            for opc in objects['scenes']:
-                opc_update = deepcopy(template_update)
-                opc_update['opcname'] = opc
-                sample['surfaceUpdates'].append(opc_update)
+                sample['shattercones'].append(dict(name=str(cone), count=np.random.randint(
+                    low=int(objects['shatter_cone_settings']['min']),
+                    high=int(objects['shatter_cone_settings']['max']))))
+            # Deactivated: toggling surfaces on and off
+            # 1) generate snapshot without shatter cones but with scenes
+            #sample['filename'] = camera_prefix + str(j) + "_OPCs"
+            # for cone in objects['shatter_cones']:
+            #     cone_update = deepcopy(template_update)
+            #     cone_update['opcname'] = cone
+            #     # add trafo if given
+            #     # if "coneTrafo" in cone:
+            #     #     cone_update['trafo'] = str(cone['coneTrafo'])
+            #     # sam
+            #     # ple['surfaceUpdates'].append(cone_update)
+            # for opc in objects['scenes']:
+            #     opc_update = deepcopy(template_update)
+            #     opc_update['opcname'] = opc
+            #     opc_update['visible'] = True
+            #     sample['surfaceUpdates'].append(opc_update)
+            # snaps.append(deepcopy(sample))
+            # # 2) generate snapshot with shatter cones but without scenes
+            # sample = deepcopy(template_snapshot)
+            # sample['filename'] = camera_prefix + str(j) + "_SCs"
+            # sample['view']['forward'] = str(forward.tolist())
+            # ##################################
+            # sample['view']['location'] = str((2 * up_vector).tolist())
+            # # sample['view']['up'] = str(up.tolist())
+            # for cone in objects['shatter_cones']:
+            #     cone_update = deepcopy(template_update)
+            #     cone_update['opcname'] = cone
+            #     cone_update['visible'] = True
+            #     sample['surfaceUpdates'].append(cone_update)
+            # for opc in objects['scenes']:
+            #     opc_update = deepcopy(template_update)
+            #     opc_update['opcname'] = opc
+            #     sample['surfaceUpdates'].append(opc_update)
             snaps.append(deepcopy(sample))
     return snaps
 

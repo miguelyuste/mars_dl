@@ -3,5 +3,13 @@ scenes:
   - 'StereoMosaic'
 shatter_cones:
   - 'Terny_Crater_Ukraine_Model_1'
+  - 'Steinheim_Germany_Model_1'
+  - 'Vista_Alegra_Brazil_RC1_Model_1'
+  - 'Wells_creek_Tennessee_Model_1'
+shatter_cone_settings:
+  min: 0
+  max: 3
 camera_centers:
   - [-2486880.90, 2288937.08, -279361.15]
+
+    
