@@ -5,7 +5,7 @@ from glob import glob
 import os
 from sys import exit
 from tqdm import tqdm
-import concurrent
+import concurrent.futures
 
 def adjust_resolution(im, resolution):
     # if resolution not correct, adjust it
