@@ -6,10 +6,12 @@ import numpy as np
 import argparse
 from copy import deepcopy
 import yaml
+from math import radians
+from scipy.spatial.transform import Rotation as R
 
 # JSON outfile header with default PRo3D params
 out_dict = {
-    "fieldOfView": 5.47,
+    "fieldOfView": 0,
     "resolution": "[1024, 1024]",
     "snapshots": [],
     "version": 0
@@ -35,23 +37,47 @@ template_update = {
     "visible": False
 }
 
+def rotation_matrix(axis, theta):
+    """
+    Return the rotation matrix associated with counterclockwise rotation about
+    the given axis by theta radians.
+    """
+    axis = np.asarray(axis)
+    axis = axis / math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta / 2.0)
+    b, c, d = -axis * math.sin(theta / 2.0)
+    aa, bb, cc, dd = a * a, b * b, c * c, d * d
+    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
 def sample_spherical(npoints, radius, obj, ndim=3):
-    #generate points and normalise them
+    # generate points and normalise them
     vec = np.random.randn(ndim, npoints)
     vec /= np.linalg.norm(vec, axis=0)
-    #apply radius
+    # apply radius
     vec *= radius
-    #center points around reshaped interest point
+    # center points around reshaped interest point
     locations = vec + np.expand_dims(obj, -1)
-    #calculate forward vectors and normalise them
+    # calculate forward vectors and normalise them
     forwards = np.expand_dims(obj, -1) - locations
     forwards_norms = np.linalg.norm(forwards, axis=0)
     forwards /= forwards_norms
     # make forward vectors orthogonal to up
     forwards *= -(np.dot(up_vector, forwards) / forwards_norms * 2)
     forwards = forwards + up_vector[:, None]
-    return locations.T, forwards.T
+    # rotate forward vector downwards
+    normals = np.cross(forwards.T, up_vector[:, None].T)
+    theta = np.asarray([radians(objects['rotation'])])
+    rot_vec = (normals/np.linalg.norm(normals, axis=-1)[...,None])*theta[...,None]
+    r = R.from_rotvec(rot_vec)
+    forwards = r.apply(forwards.T)
+    # forwards = np.matmul(rotation_matrix(np.cross(forwards.T,up_vector[:, None].T), objects['rotation']*math.pi/180),forwards.T)
+    # normals = np.cross(forwards.T,up_vector[:, None].T)
+    # normals /= np.linalg.norm(normals, axis=0)
+    # forwards = np.cos(360-objects['rotation'])*forwards + np.sin(360-objects['rotation'])*normals.T
+    return locations.T, forwards
 
 
 def create_snapshots():

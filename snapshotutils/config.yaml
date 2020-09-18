@@ -11,5 +11,6 @@ shatter_cone_settings:
   max: 3
 camera_centers:
   - [-2486880.90, 2288937.08, -279361.15]
+rotation: 1
 
     
