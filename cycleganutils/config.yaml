@@ -1,0 +1,7 @@
+cyclegan_pathA: 'D:/Datasets/Label-Mars/NOAH-SSL-DB-001-DB1 Annotations and Images/images_clean'
+cyclegan_pathB: 'D:/PRo3D_Snapshots/preprocessed'
+mastcam_pathIn: 'E:\TFM\MSLMST\'
+mastcam_pathOut: 'E:\TFM\MSLMST_Proc\'
+cyclegan_pathOut: 'D:/Datasets/Label-Mars-CycleGAN'
+resolution: [1024, 1024]
+mastcam_processPool: 10
