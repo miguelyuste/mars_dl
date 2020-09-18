@@ -4,6 +4,7 @@ import os
 
 from PIL import Image
 
+# Todo: move these to config
 path_in = "D:\\Datasets\\Label-Mars\\NOAH-SSL-DB-001-DB1 Annotations and Images\\"
 path_out = "D:\\Datasets\\Label-Mars\\NOAH-SSL-DB-001-DB1 Annotations and Images\\images_clean"
 
@@ -14,7 +15,7 @@ def filter_artificial(path_in, path_out):
         with open(path_in + "/annotations/" + filename, 'r') as annotations:
             data = annotations.read()
             soup = BeautifulSoup(data, 'xml')
-            # filter out tracks too?
+            # Todo: filter out tracks too?
             if not any(tag.contents[0].startswith("Artificial") for tag in soup.select('name')):
                 image = Image.open(path_in + "images/" + filename.strip(".xml") + ".jpg")
                 copy_out_path = path_out + "/" + filename.strip(".xml")

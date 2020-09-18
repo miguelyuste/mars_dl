@@ -19,7 +19,7 @@ def filter_empty(search_dir, output_dir):
         if filename.endswith(".png"):
             image = cv2.imread(search_dir + "/" + filename, 0)
             if not is_empty(image):
-                copy_out_path = output_dir + "/" + filename
+                copy_out_path = output_dir + "/" + str(processed) + ".png"
                 if os.path.exists(f"{copy_out_path}.json"):
                     i = 2
                     while os.path.exists("{}_{}.json".format(copy_out_path, i)):
