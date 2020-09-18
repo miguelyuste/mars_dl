@@ -4,4 +4,4 @@ mastcam_pathIn: 'E:\TFM\MSLMST\'
 mastcam_pathOut: 'E:\TFM\MSLMST_Proc\'
 cyclegan_pathOut: 'D:/Datasets/Label-Mars-CycleGAN'
 resolution: [1024, 1024]
-mastcam_processPool: 10
+mastcam_processPool: 16
