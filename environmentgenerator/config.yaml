@@ -1,0 +1,10 @@
+obj2heightmap:
+  path_in: 'E:\TFM\Bakeoff 2020\Job_0796_003477_MSLMST_obj_cart_single\'
+  path_out: "D:/Master Thesis/try/"
+  obj_in: "T000_P007_C000.obj"
+  heightmap_out: "gale_crater.png"
+  path_to_converter:
+  r16_out: "marstest.r16"
+fitgroundplane:
+  malloc_discard_instances: 0.9
+  malloc_step: 0.01
