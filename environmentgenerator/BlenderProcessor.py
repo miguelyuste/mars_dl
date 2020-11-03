@@ -60,6 +60,48 @@ def fit_plane(vertices):
 
     return plane
 
+# todo: replace hardcoded values, rename class
+
+def reverse_mapping(array, from_min=0, from_max=1, to_min=0.1, to_max=100):
+    slope = (to_max - to_min) / (from_max - from_min)
+    return to_min + slope * (array - from_min)
+
+
+def get_depthmap():  # ACTUALLY, this is the DISTANCE map (distance of each pixel from the camera!)
+    scene = bpy.data.scenes['Scene']
+    tree = scene.node_tree
+    # create output node
+    v = tree.nodes.new('CompositorNodeViewer')
+    v.use_alpha = False
+    depth = np.asarray(bpy.data.images["Viewer Node"].pixels)
+    depth = np.reshape(depth, (1080, 1920, 4))
+    depth = depth[:, :, 0]
+    depth = np.flipud(depth)
+    depth = reverse_mapping(depth)
+
+    # np.save(r"C:\Users\migue\Desktop/distance_from_camera.npy", depth)
+    return depth
+
+
+def distance_to_depth_conversion(dist_img, camera_fov=50.7):
+    img_width = dist_img.shape[1]
+    img_height = dist_img.shape[0]
+    focal_in_pixels = (img_width * 0.5) / tan(camera_fov * 0.5 * pi / 180)
+
+    # Get x_i and y_i (distances from optical center)
+    cx = img_width // 2
+    cy = img_height // 2
+
+    xs = np.arange(img_width) - cx
+    ys = np.arange(img_height) - cy
+    xis, yis = np.meshgrid(xs, ys)
+
+    depth = np.sqrt(
+        dist_img ** 2 / (
+                (xis ** 2 + yis ** 2) / (focal_in_pixels ** 2) + 1
+        )
+    )
+    return depth
 
 def process_obj(filepath):
     delete_scene_objects()
@@ -87,6 +129,8 @@ def process_obj(filepath):
     rot_quat = looking_direction.to_track_quat('Z', 'Y')
 
     camera.rotation_euler = rot_quat.to_euler()
+
+    get_depthmap()
 
 
 if __name__ == '__main__':

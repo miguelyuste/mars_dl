@@ -6,5 +6,5 @@ obj2heightmap:
   path_to_converter:
   r16_out: "marstest.r16"
 fitgroundplane:
-  malloc_discard_instances: 0.9
+  malloc_discard_instances: 0.95
   malloc_step: 0.01
