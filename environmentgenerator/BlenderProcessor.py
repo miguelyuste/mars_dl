@@ -1,3 +1,5 @@
+import datetime
+import logging
 import os
 from math import pi, tan
 from pathlib import Path
@@ -87,6 +89,7 @@ def reverse_mapping(array, from_min=0, from_max=1, to_min=0.1, to_max=100):
 
 # distance map from camera to surfaces
 def get_distancemap_rgbimage():
+    print("Extracting RGBD image...")
     scene = bpy.data.scenes['Scene']
     tree = scene.node_tree
     # create output node
@@ -117,6 +120,7 @@ def get_distancemap_rgbimage():
 
 
 def distance_to_depth_conversion(dist_map, camera_fov=50.7):
+    print("Performing distance to depth conversion...")
     img_width = dist_map.shape[1]
     img_height = dist_map.shape[0]
     focal_in_pixels = (img_width * 0.5) / tan(camera_fov * 0.5 * pi / 180)
@@ -140,20 +144,25 @@ def distance_to_depth_conversion(dist_map, camera_fov=50.7):
 
 def process_obj(filepath):
     # import object
+    print("Loading next OBJ...")
     keys_before_import = bpy.data.objects.keys()
+    logger.info(f"Attempting OBJ load: {str(filepath)}")
     bpy.ops.import_scene.obj(filepath=filepath)
+    logger.info("Successfully loaded OBJ file")
     # todo: is this necessary?
     imported_keys = [s for s in bpy.data.objects.keys() if s not in keys_before_import]
     # select object
     object = bpy.data.objects[imported_keys[0]]
     # clear any possible rotation set in the obj
     object.rotation_euler = mathutils.Vector([0, 0, 0])
-    print('Processing obj: ', object.name)
+    print('Processing OBJ: ', object.name)
     # extract vertices
     vertices = np.empty([len(bpy.data.meshes[object.name].vertices), 3], dtype=np.float32)
     for i, vertex in enumerate(bpy.data.meshes[object.name].vertices):
         vertices[i] = np.asarray(vertex.co)
     # calculate center point and PCA for camera placing
+    print("Adjusting camera view...")
+    logger.info("Performing camera adjustment")
     estimated_center_point = vertices.mean(axis=0)
     pca = PCA(n_components=3)
     pca.fit(vertices)
@@ -173,35 +182,66 @@ def process_obj(filepath):
     # close up on object (fit entire object into view)
     bpy.ops.view3d.camera_to_view_selected()
     # get distance to camera and RGB values
+    logger.info("Calling get_distancemap_rgbimage()")
     distance_map, rgb_image = get_distancemap_rgbimage()
     # delete object so it isn't visible in the next image
+    print("Cleaning up scene...")
+    logger.info("Deleting OBJ")
     bpy.ops.object.select_all(action='DESELECT')
     object.select_set(True)
     bpy.ops.object.delete()
     # convert camera distances to actual depth data
+    logger.info("Calling distance_to_depth_conversion()")
     depth_map = distance_to_depth_conversion(distance_map)
     # prepare and save as numpy array
     rgbd_image = np.concatenate([rgb_image, depth_map[..., None]], axis=-1)
-    np.save(str(path_out + Path(filepath).stem + ".npy"), rgbd_image)
+    logger.info("Saving outfile")
+    print("Saving output file")
+    np.save(str(path_out + "/" + Path(filepath).stem + ".npy"), rgbd_image)
 
 
 if __name__ == '__main__':
-    file_loc = 'E:\\TFM\\Bakeoff 2020\\Job_0796_003477_MSLMST_obj_cart_single\\T000_P007_C000.obj'
-    # load object config file
+    # file_loc = 'E:\\TFM\\Bakeoff 2020\\Job_0796_003477_MSLMST_obj_cart_single\\T000_P007_C000.obj'
     print("Initialising Blender processor...")
+
+    # load script config
     with open("C:\\Users\\migue\\PycharmProjects\\mars_dl\\environmentgenerator\\config.yaml") as f:
         config = load(f, Loader=FullLoader)
     path_in = config['blenderprocessor']['path_in']
-    path_out = config['blenderprocessor']['path_out']
+    path_out = config['blenderprocessor']['path_out'] + datetime.datetime.now().strftime("%Y-%m-%d %Hh%Mm%Ss")
     # create output path if it doesn't exist
     if not os.path.exists(path_out):
         os.makedirs(path_out)
+
+    # create logger
+    logger = logging.getLogger('blender_processor')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(path_out + '/blender_processor.log')
+    fh.setLevel(logging.DEBUG)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
     # load scene
     scene = bpy.data.scenes['Scene']
     # make scene the active one
     bpy.context.window.scene = scene
     # delete unecessary objects
+    print("Initial scene cleanup...")
     delete_scene_objects()
     print("Commencing data extraction...")
+
+    # launch OBJ processing
     for file in tqdm(Path(path_in).rglob('*.obj'), desc='Processing OBJs:'):
-        process_obj(str(file))
+        try:
+            process_obj(str(file))
+        except Exception:
+            logger.error("Fatal error in OBJ processing", exc_info=True)

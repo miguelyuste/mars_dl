@@ -9,5 +9,5 @@ fitgroundplane:
   malloc_discard_instances: 0.95
   malloc_step: 0.01
 blenderprocessor:
-  path_in: 'E:\TFM\Bakeoff 2020\CART'
-  path_out: "E:\TFM\Blender Processor Results\\"
+  path_in: 'E:/TFM/Bakeoff 2020/CART'
+  path_out: "E:/TFM/Blender Processor Results/"
