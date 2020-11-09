@@ -47,11 +47,12 @@ def plot_heightmap():
 if __name__ == '__main__':
     # load object config file
     print("Loading configuration...")
-    with open('./config.yaml') as f:
+    with open('environmentgenerator/config.yaml') as f:
         config = load(f, Loader=FullLoader)
     config = config['obj2heightmap']
     path_in = config['path_in']
-    obj_in = config['file_out']
+    obj_in = config['obj_in']
+    #file_out = config['file_out']
 
     # read OBJ file, extract vertices
     print("Processing OBJ...")

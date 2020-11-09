@@ -11,3 +11,8 @@ fitgroundplane:
 blenderprocessor:
   path_in: 'E:/TFM/Bakeoff 2020/CART'
   path_out: "E:/TFM/Blender Processor Results/"
+psganpreprocess:
+  path_in: "E:/TFM/Blender Processor Results/2020-11-09 14h48m18s"
+  processPool: 16
+  chunk_res: [256,256]
+  max_empty: 5

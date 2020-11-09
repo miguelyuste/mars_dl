@@ -24,7 +24,7 @@ def preprocess_image(file):
 if __name__ == '__main__':
     # load object config file
     print("Loading configuration...")
-    with open('./config.yaml') as f:
+    with open('config.yaml') as f:
         config = load(f, Loader=FullLoader)
     if not config['mastcam_pathIn']:
         print("Input path configuration missing. Please specify the input path in the YAML config file.")
