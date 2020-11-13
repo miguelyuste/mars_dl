@@ -32,9 +32,11 @@ def chunker(image):
     return chunks
 
 
-def preprocess_rbgd(npy_filepath):
+def preprocess_rbgd(image_filepath):
     # load .npy file containing RGBD image
-    rgbd_image = np.load(npy_filepath)
+    image = Image.open(image_filepath)
+    image.load()
+    rgbd_image = np.asarray(image)
     # get chunks, save only if % of "empty" pixels is lower than set threshold
     for i, chunk in enumerate(chunker(rgbd_image)):
         empty_pixel_count = (chunk[:, :, 3] > 40).sum()
@@ -42,7 +44,7 @@ def preprocess_rbgd(npy_filepath):
         percentage_empty = 100 * (empty_pixel_count / total_pixel_count)
         if percentage_empty < config['max_empty']:
             outfile = Image.fromarray(chunk, 'RGBA')
-            outfile.save(path_out + "/" + Path(npy_filepath).stem + f"_{i}.png")
+            outfile.save(path_out + "/" + Path(image_filepath).stem + f"_{i}.png")
 
 
 if __name__ == '__main__':
@@ -64,6 +66,6 @@ if __name__ == '__main__':
     # concurrently process images
     Parallel(n_jobs=config['processPool'], backend="threading")(
         map(delayed(preprocess_rbgd), (file for file in
-                                       tqdm(glob(path_in + "**/*.npy"),
+                                       tqdm(glob(path_in + "**/*.png"),
                                             desc="Preprocessing RGBD images"))))
     print("Dataset successfully processed.")

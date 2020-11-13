@@ -12,6 +12,7 @@ from pathlib import Path
 from sklearn.decomposition import PCA
 import logging
 import datetime
+from PIL import Image
 
 
 def unit_vector(vector):
@@ -101,7 +102,7 @@ def get_distancemap_rgbimage():
     bpy.ops.render.render(write_still=False)
     distance_map = np.asarray(bpy.data.images["Viewer Node"].pixels)
 
-    # todo: if camera resolution can be tweaked, this can be parametrised 
+    # todo: if camera resolution can be tweaked, this can be parametrised
     distance_map = np.reshape(distance_map, (1080, 1920, 4))
     distance_map = distance_map[:, :, 0]
     distance_map = np.flipud(distance_map)
@@ -111,7 +112,7 @@ def get_distancemap_rgbimage():
     bpy.ops.render.render(write_still=False)
     rgb_image = np.asarray(bpy.data.images["Viewer Node"].pixels)
 
-    # todo: if camera resolution can be tweaked, this can be parametrised 
+    # todo: if camera resolution can be tweaked, this can be parametrised
     rgb_image = np.reshape(rgb_image, (1080, 1920, 4))
     rgb_image = rgb_image[:, :, 0:3]
     rgb_image = np.flipud(rgb_image)
@@ -173,7 +174,7 @@ def process_obj(filepath):
     camera = bpy.data.objects['Camera']
     # point camera at object central point
     camera.location = estimated_center_point + np.asarray(normal_comp)
-    # rotate and align camera with object 
+    # rotate and align camera with object
     looking_direction = camera.location - mathutils.Vector(estimated_center_point)
     rot_quat = looking_direction.to_track_quat('Z', 'Y')
     cam_x = rot_quat @ mathutils.Vector((1.0, 0.0, 0.0))
@@ -191,14 +192,16 @@ def process_obj(filepath):
     bpy.ops.object.select_all(action='DESELECT')
     object.select_set(True)
     bpy.ops.object.delete()
-    # convert camera distances to actual depth data 
+    # convert camera distances to actual depth data
     logger.info("Calling distance_to_depth_conversion()")
     depth_map = distance_to_depth_conversion(distance_map)
     # prepare and save as numpy array
     rgbd_image = np.concatenate([rgb_image, depth_map[..., None]], axis=-1)
     logger.info("Saving outfile")
     print("Saving output file")
-    np.save(str(path_out + "/" + Path(filepath).stem + ".npy"), rgbd_image)
+    # np.save(str(path_out + "/" + Path(filepath).stem + ".npy"),rgbd_image)
+    outfile = Image.fromarray(rgbd_image, 'RGBA')
+    outfile.save(path_out + "/" + Path(filepath).stem + ".png")
 
 
 if __name__ == '__main__':
@@ -214,7 +217,7 @@ if __name__ == '__main__':
     if not os.path.exists(path_out):
         os.makedirs(path_out)
 
-    # create logger 
+    # create logger
     logger = logging.getLogger('blender_processor')
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
@@ -240,7 +243,7 @@ if __name__ == '__main__':
     delete_scene_objects()
     print("Commencing data extraction...")
 
-    # launch OBJ processing 
+    # launch OBJ processing
     errors = 0
     for file in tqdm(Path(path_in).rglob('*.obj'), desc='Processing OBJs:'):
         try:
@@ -253,6 +256,5 @@ if __name__ == '__main__':
         logger.info("Execution finished without errors.")
     else:
         print(
-            f"All input OBJs have been processed, but there were {str(errors)} errors during the execution of the "
-            f"script, please see the logs for more information.")
+            f"All input OBJs have been processed, but there were {str(errors)} errors during the execution of the script, please see the logs for more information.")
         logger.info("Execution finished with {str(errors)} errors.")
