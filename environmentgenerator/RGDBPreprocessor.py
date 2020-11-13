@@ -17,6 +17,7 @@ def chunker(image):
     chunks_y = int(np.ceil(image.shape[1] / chunk_resolution[1]))
     chunks = []
     # get indices of chunk, then slice chunk and append
+    # todo: RANGES MIGHT BE WRONG! check objconverter
     for i in range(chunks_x - 1):
         for j in range(chunks_y - 1):
             if i != (chunks_x - 1):  # iterate ascendingly in steps of size chunk_resolution[x]
