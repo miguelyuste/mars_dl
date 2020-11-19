@@ -17,21 +17,29 @@ from tqdm import tqdm
 
 
 def run_adjust(file):
-    # convert infile to JPG
-    infile_jpg = Path(file).with_suffix(".jpg")
-    image = Image.open(file).convert("RGB")
-    image.save(Path(file).with_suffix(".jpg"))
-    # run script on JPG infile
-    outfile_jpg = args.output + "/" + Path(file).stem + "_corrected.jpg"
-    subprocess.run(["HistAdopt.exe", "Ref.jpg", f"{infile_jpg}", f"{outfile_jpg}"])
-    # delete JPG infile
-    os.remove(infile_jpg)
-    # convert outfile to PNG
-    outfile_png = Path(outfile_jpg).with_suffix(".png")
-    image = Image.open(outfile_jpg).convert("RGB")
-    image.save(outfile_png)
-    # delete JPG outfile
-    os.remove(outfile_jpg)
+    try:
+        # convert infile to JPG
+        infile_jpg = Path(file).with_suffix(".jpg")
+        image = Image.open(file).convert("RGB")
+        image.save(Path(file).with_suffix(".jpg"))
+        # run script on JPG infile
+        out_folder = args.output+"/"+Path(file).parent.name
+        try:
+            os.makedirs(out_folder, exist_ok=True)
+        except OSError as exc:  # Guard against race condition
+            print(exc)
+        outfile_jpg = out_folder + "/" + Path(file).stem + "_corrected.jpg"
+        subprocess.run(["HistAdopt.exe", "Ref.jpg", f"{infile_jpg}", f"{outfile_jpg}"])
+        # delete JPG infile
+        os.remove(infile_jpg)
+        # convert outfile to PNG
+        outfile_png = Path(outfile_jpg).with_suffix(".png")
+        image = Image.open(outfile_jpg).convert("RGB")
+        image.save(outfile_png)
+        # delete JPG outfile
+        os.remove(outfile_jpg)
+    except Exception as e:
+        print(e)
 
 
 if __name__ == '__main__':
@@ -52,4 +60,4 @@ if __name__ == '__main__':
     Parallel(n_jobs=16, backend="loky")(
         map(delayed(run_adjust), (file for file in tqdm(files, desc="Processing images"))))
 
-    print("All images processed successfully.")
+    print("All images processed.")
