@@ -9,14 +9,14 @@ fitgroundplane:
   malloc_discard_instances: 0.95
   malloc_step: 0.01
 blenderprocessor:
-  path_in: 'E:\TFM\Blender Processor Results\2020-11-09 14h48m18s\psgan_out'
-  path_out: "E:/TFM/Blender Processor Results/try"
+  path_in: 'E:\TFM\Bakeoff 2020\CART'
+  path_out: "E:/TFM/Blender Processor Results/"
 psganpreprocess:
-  path_in: "E:/TFM/Blender Processor Results/2020-11-09 14h48m18s"
+  path_in: "E:\\TFM\\Blender Processor Results\\2020-11-23 21h49m36s\\"
   processPool: 16
   chunk_res: [256,256]
   max_empty: 5
 obj_converter:
-  path_in: 'E:\TFM\Blender Processor Results\2020-11-09 14h48m18s\psgan_out'
-  psgan_output_size: 160
+  path_in: 'E:\TFM\Blender Processor Results\2020-11-23 21h49m36s\psgan_out_3'
+  psgan_output_size: 128
   padding_psgan: 2

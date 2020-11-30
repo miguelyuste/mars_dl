@@ -199,9 +199,9 @@ def process_obj(filepath):
     rgbd_image = np.concatenate([rgb_image, depth_map[..., None]], axis=-1)
     logger.info("Saving outfile")
     print("Saving output file")
-    # np.save(str(path_out + "/" + Path(filepath).stem + ".npy"),rgbd_image)
-    outfile = Image.fromarray(rgbd_image, 'RGBA')
-    outfile.save(path_out + "/" + Path(filepath).stem + ".png")
+    np.save(str(path_out + "/" + Path(filepath).stem + ".npy"),rgbd_image.astype(np.float32))
+    #outfile = Image.fromarray(rgbd_image, 'RGBA')
+    #outfile.save(path_out + "/" + Path(filepath).stem + ".png")
 
 
 if __name__ == '__main__':

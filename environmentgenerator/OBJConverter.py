@@ -32,26 +32,11 @@ def undo_conversion(depth_map, camera_fov=50.7):
 
     return dist_map
 
-def chunker(image):
-    # max number of chunks per axis, last chunk on each axis will overlap slightly
-    chunks_x = int(np.floor(image.shape[0] / psgan_output_size))
-    chunks_y = int(np.floor(image.shape[1] / psgan_output_size))
-    chunks = []
-    # get indices of chunk, then slice chunk and append
-    for i in range(chunks_x):
-        for j in range(chunks_y):
-            idx_x = [(psgan_output_size * i) + padding_psgan, (psgan_output_size * (i + 1)) + padding_psgan]
-            idx_y = [(psgan_output_size * j) + padding_psgan, (psgan_output_size * (j + 1)) + padding_psgan]
-            chunks.append(image[idx_x[0]:idx_x[1], idx_y[0]:idx_y[1], :])
-    print("after chunking")
-    return chunks
-
-
 def to_obj(tile, outfile):
     #data = np.random.random([600, 800])
     z = tile[:, :, 3]
     z = undo_conversion(z)
-    
+
     idx = np.mgrid[:z.shape[0], :z.shape[1]].reshape([2, -1])
     z = z.reshape([1, -1])
     V = np.vstack([idx, np.ones_like(z), 1 / z])
@@ -69,7 +54,6 @@ def to_obj(tile, outfile):
     C[:, 0, 0]
 
     with open(path_out + outfile, "w") as file:
-        print(path_out + outfile)
         for r in range(z.shape[0]):
             for c in range(z.shape[1]):
                 rgb = RGBD[r, c, :3]
@@ -77,13 +61,29 @@ def to_obj(tile, outfile):
                 if 0 < xyz[2] < 40 :
                     rgb = rgb.astype(str)
                     xyz = xyz.astype(str)
-                    file.write("v "+xyz[0]+" "+xyz[2]+" "+xyz[1]+" "+rgb[0]+" "+rgb[1]+" "+rgb[2]+"\n")
+                    file.write("v "+xyz[0]+" "+xyz[1]+" "+xyz[2]+" "+rgb[0]+" "+rgb[1]+" "+rgb[2]+"\n")
 
+
+def image_chunker(image):
+    # max number of chunks per axis, last chunk on each axis will overlap slightly
+    chunks_x = int(np.floor(image.shape[0] / psgan_output_size))
+    chunks_y = int(np.floor(image.shape[1] / psgan_output_size))
+    chunks = []
+    # get indices of chunk, then slice chunk and append
+    for i in range(chunks_x):
+        for j in range(chunks_y):
+            idx_x = [(psgan_output_size * i) + padding_psgan, (psgan_output_size * (i + 1)) + padding_psgan]
+            idx_y = [(psgan_output_size * j) + padding_psgan, (psgan_output_size * (j + 1)) + padding_psgan]
+            chunks.append(image[idx_x[0]:idx_x[1], idx_y[0]:idx_y[1], :])
+    return chunks
 
 def process_mosaic(mosaic_path):
-    mosaic = np.asarray(Image.open(mosaic_path))
-    tiles = chunker(mosaic)
+    # mosaic = np.asarray(Image.open(mosaic_path))
+    # a = Image.open(mosaic_path)
+    # tiles = image_chunker(mosaic)
+    tiles = np.load(mosaic_path)
     for i, tile in enumerate(tiles):
+        #np.save(f'E:/tile_{i}.npy', tile)
         to_obj(tile, Path(mosaic_path).stem + f"_{i}.obj")
 
 
@@ -105,8 +105,7 @@ if __name__ == '__main__':
         os.makedirs(path_out)
 
     # process texture mosaics
-    to_process = [file for file in glob(path_in + "**/generated_textures*.png")]
-    print(to_process)
+    to_process = [file for file in glob(path_in + "**/generated_textures*.npy")]
     for mosaic_path in tqdm(to_process, desc="Converting PSGAN results into OBJ format"):
         process_mosaic(mosaic_path)
 
