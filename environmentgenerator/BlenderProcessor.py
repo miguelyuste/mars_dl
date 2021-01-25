@@ -98,6 +98,13 @@ def get_distancemap_rgbimage():
     # v = tree.nodes.new('CompositorNodeViewer')
     # v.use_alpha = False
 
+    # NOTE: Blender can only visualize one image (depth or RBG) on the viewer node at a time.
+    # The workaround is to include a switch that selects what image is output to the viewer node,
+    # rendering the scene twice and grabbing the data from the viewer node when switch is on (for the distance)
+    # and off (for the RGB data).
+
+    # Image data from bpy is in RGBA format, pixels are floats.
+
     tree.nodes['Switch'].check = True
     bpy.ops.render.render(write_still=False)
     distance_map = np.asarray(bpy.data.images["Viewer Node"].pixels)
@@ -116,7 +123,7 @@ def get_distancemap_rgbimage():
     rgb_image = np.reshape(rgb_image, (1080, 1920, 4))
     rgb_image = rgb_image[:, :, 0:3]
     rgb_image = np.flipud(rgb_image)
-    rgb_image = reverse_mapping(rgb_image)
+    #rgb_image = reverse_mapping(rgb_image) # <- Likely wrong, it makes sense for depth, NOT for RGB data.
 
     return distance_map, rgb_image
 
