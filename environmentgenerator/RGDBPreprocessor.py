@@ -57,12 +57,12 @@ if __name__ == '__main__':
         config = load(f, Loader=FullLoader)
     config = config['psganpreprocess']
     path_in = config['path_in']
-    path_out = path_in + "/preprocessed"
+    path_out = path_in + config['path_out'] + "_empty=" + str(config['max_empty'])
     chunk_resolution = config['chunk_res']
 
     # create output path if it doesn't exist
     if not os.path.exists(path_out):
-        print("Output folder created: /preprocessed")
+        print(f"Output folder created: {config['path_out']}")
         os.makedirs(path_out)
 
     # concurrently process images

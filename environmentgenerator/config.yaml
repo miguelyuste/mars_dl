@@ -12,11 +12,13 @@ blenderprocessor:
   path_in: 'E:\TFM\Bakeoff 2020\CART'
   path_out: "E:/TFM/Blender Processor Results/"
 psganpreprocess:
-  path_in: "E:\\TFM\\Blender Processor Results\\2020-11-23 21h49m36s\\"
-  processPool: 16
+  path_in: "E:\\TFM\\Blender Processor Results\\2020-11-23 21h49m36s"
+  path_out: "\\preprocessed"
+  processPool: 32
   chunk_res: [256,256]
-  max_empty: 5
+  max_empty: 0.001
 obj_converter:
-  path_in: 'E:\TFM\Blender Processor Results\2020-11-23 21h49m36s\psgan_out_3'
+  path_in: 'C:\Users\migue\Desktop'
   psgan_output_size: 128
   padding_psgan: 2
+  is_image: false
