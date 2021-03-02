@@ -18,7 +18,7 @@ psganpreprocess:
   chunk_res: [256,256]
   max_empty: 0.001
 obj_converter:
-  path_in: 'E:\TFM\SGAN Results'
-  psgan_output_size: 128
+  path_in: 'F:\\TFM\\SGAN Results'
+  psgan_output_size: 512
   padding_psgan: 2
   is_image: false

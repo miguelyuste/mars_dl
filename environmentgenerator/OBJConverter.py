@@ -44,7 +44,7 @@ def to_obj(tile, outfile):
 
     rgb = (tile[...,:3] / 2) + 0.5 # tile has values in [-1,1], map RGB to [0,1]
     z = tile[:, :, 3]
-    z = median_filter(z, size=9)
+    #
 
     if is_image:
         z = undo_conversion(z)
@@ -53,6 +53,9 @@ def to_obj(tile, outfile):
 
     idx = np.mgrid[:z.shape[0], :z.shape[1]].reshape([2, -1])
     z = z.reshape([1, -1])
+    # Todo:interpolation necessary?
+    #z = np.interp(z, (z.min(), z.max()), (+0.5, +1))
+    z = median_filter(z, size=3)
     V = np.vstack([idx, np.ones_like(z), 1 / z])
 
     # todo: parametrise f_x and f_y
@@ -68,6 +71,10 @@ def to_obj(tile, outfile):
 
     # Calculate variables for outlier filtering
     mu = np.mean(z)
+    # If height values are mostly negative, invert sign
+    if(mu<0):
+        z = -z
+        mu = -mu
     sigma = np.std(z)
     inliers_idx = np.abs(C[3,...] - mu) < 2 * sigma
     TOTAL_POINTS = (tile.shape[0]*tile.shape[1])
@@ -77,10 +84,12 @@ def to_obj(tile, outfile):
     if MAX_OUTLIERS <= num_outliers <= 2*MAX_OUTLIERS:
         print(f'Skipping outliers filtering because there are {num_outliers} outliers (mu={mu}, std={sigma}, max outliers={MAX_OUTLIERS}).')
     # If number of outliers > 2*max_outliers: discard tile
-    elif num_outliers > 2*MAX_OUTLIERS:
-        print(f'Tile (mu={mu}, std={sigma}) contains {num_outliers} outliers, which is more than two times the treshold of max outliers({MAX_OUTLIERS}). Discarding tile.')
-        return
+    # elif num_outliers > 2*MAX_OUTLIERS:
+    #     print(f'Tile (mu={mu}, std={sigma}) contains {num_outliers} outliers, which is more than two times the treshold of max outliers({MAX_OUTLIERS}). Discarding tile.')
+    #     return
 
+
+    # Todo: are really all cases so extreme?
     # Build vertex index-coordinates map for later triangulation
     idx_map = {}
     next_idx = 1
@@ -93,7 +102,7 @@ def to_obj(tile, outfile):
             for c in range(tile.shape[1]):
                 xyz = C[:3, r, c]
                 # Add and write vertex if it's an inlier or the number of outliers isn't above treshold
-                if num_outliers >= MAX_OUTLIERS or inliers_idx[r,c]:
+                if inliers_idx[r,c]: #num_outliers >= MAX_OUTLIERS or
                     idx_map[(r,c)] = next_idx
                     next_idx += 1
                     point_cloud.append(xyz)
@@ -200,7 +209,7 @@ if __name__ == '__main__':
         os.makedirs(path_out)
 
     # process texture mosaics
-    to_process = [file for file in glob(path_in + "**/generated_textures_118_fc1.0_ngf80_ndf80_dep4-4_WGAN_mirror.npy")]
+    to_process = [file for file in glob(path_in + "**/generated_textures_159*.npy")]
     for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"):
         process_mosaic(mosaic_path)
 
