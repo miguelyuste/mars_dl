@@ -19,7 +19,7 @@ def find_files():
                    + glob(args.path_B + "/**/*.gif", recursive=True)
                    + glob(args.path_B + "/**/*.tif", recursive=True))
     except Exception as e:
-        print("Exception while searching for images in given directories: " + repr(e))
+        print("\nException while searching for images in given directories: " + repr(e))
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
@@ -39,7 +39,17 @@ def process_image_pair(paths, pair, file_list_len):
     try:
         index = pair[0]
         im_a = Image.open(pair[1][0])
+        try:
+            im_a.load()
+        except Exception as e:
+            print("\nCouldn't load image: " + pair[1][0] + "\nNested exception is: " + repr(e))
+            return
         im_b = Image.open(pair[1][1])
+        try:
+            im_b.load()
+        except Exception as e:
+            print("\nCouldn't load image: " + pair[1][1] + "\nNested exception is: " + repr(e))
+            return
         # we discard the images if either isn't big enough
         # Note: both networks require square images, so param "resolution" is used for both dimensions
         # if im_a.size[0] >= args.resolution and im_a.size[1] >= args.resolution:
@@ -62,13 +72,13 @@ def process_image_pair(paths, pair, file_list_len):
             # copy(pair[1][0], paths['path_A_test'] + str(index) + ".png")
             # copy(pair[1][1], paths['path_B_test'] + str(index) + ".png")
     except Exception as e:
-        print("Exception while processing image pairs: " + repr(e))
-        # print("given paths"+str(paths))
-        # print("given pair:"+str(pair))
+        print("\nException while processing following image pairs: " + str(pair) + "\n" + repr(e)) 
+        #print("given paths"+str(paths))
+        #print("given pair:"+str(pair))
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         print(exc_type, fname, exc_tb.tb_lineno)
-        sys.exit(1)
+        return
 
 
 def prepare_dataset():
