@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 from glob import glob
+import random
 
 from PIL import Image
 from joblib import Parallel, delayed
@@ -10,6 +11,7 @@ from tqdm import tqdm
 
 def find_files():
     try:
+        # find all file types accepted by CycleGAN
         files_A = (glob(args.path_A + "/**/*.jpg", recursive=True)
                    + glob(args.path_A + "/**/*.png", recursive=True)
                    + glob(args.path_A + "/**/*.gif", recursive=True)
@@ -18,6 +20,9 @@ def find_files():
                    + glob(args.path_B + "/**/*.png", recursive=True)
                    + glob(args.path_B + "/**/*.gif", recursive=True)
                    + glob(args.path_B + "/**/*.tif", recursive=True))
+        # shuffle file lists to get a representative mix even if big difference in length between files_A and files_B
+        random.shuffle(files_A)
+        random.shuffle(files_B)
     except Exception as e:
         print("\nException while searching for images in given directories: " + repr(e))
         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -42,13 +47,17 @@ def process_image_pair(paths, pair, file_list_len):
         try:
             im_a.load()
         except Exception as e:
-            print("\nCouldn't load image: " + pair[1][0] + "\nNested exception is: " + repr(e))
+            print("\nCouldn't load image: " + pair[1][0] + "; the image might be corrupted or truncated. The current "
+                                                           "image pair will be ignored. \nNested exception is: " +
+                  repr(e))
             return
         im_b = Image.open(pair[1][1])
         try:
             im_b.load()
         except Exception as e:
-            print("\nCouldn't load image: " + pair[1][1] + "\nNested exception is: " + repr(e))
+            print("\nCouldn't load image: " + pair[1][1] + "; the image might be corrupted or truncated. The current "
+                                                           "image pair will be ignored. \nNested exception is: " +
+                  repr(e))
             return
         # we discard the images if either isn't big enough
         # Note: both networks require square images, so param "resolution" is used for both dimensions
