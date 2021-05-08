@@ -230,7 +230,7 @@ if __name__ == '__main__':
 
     # process texture mosaics
     #to_process = [file for file in glob(path_in + "**/*.npy")]
-    to_process = [file for file in path_in.glob("**/*.npy")]
+    to_process = [file.relative_to(path_in) for file in path_in.glob("*/*.npy")]
     for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"):
         process_mosaic(mosaic_path)
 
