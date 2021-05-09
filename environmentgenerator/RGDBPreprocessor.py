@@ -43,10 +43,13 @@ def preprocess_rbgd(image_filepath):
         empty_pixel_count = (chunk[:, :, 3] > 40).sum()
         total_pixel_count = chunk.shape[0] * chunk.shape[1]
         percentage_empty = 100 * (empty_pixel_count / total_pixel_count)
+        # discard if a big part of the tile is empty
         if percentage_empty < config['max_empty']:
-            #outfile = Image.fromarray(chunk, 'RGBA')
-            #outfile.save(path_out + "/" + Path(image_filepath).stem + f"_{i}.png")
-            np.save(str(path_out + "/" + Path(image_filepath).stem + f"_{i}.npy"),chunk.astype(np.float32))
+            # discard if the texture is colourless
+            if np.mean(chunk[:,:,:3]*255).astype(int) > 10:
+                #outfile = Image.fromarray(chunk, 'RGBA')
+                #outfile.save(path_out + "/" + Path(image_filepath).stem + f"_{i}.png")
+                np.save(str(path_out + "/" + Path(image_filepath).stem + f"_{i}.npy"),chunk.astype(np.float32))
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ blenderprocessor:
   path_in: "E:\\Joanneum Research - Storage\\Mars-DL - Storage\\Datasets\\Bakeoff 2020\\CART"
   path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\debug_light"
 psganpreprocess:
-  path_in: "E:\\TFM\\Blender Processor Results\\2020-11-23 21h49m36s"
+  path_in: "E:\\Master Thesis - Storage\\Blender Processor Results\\debug_light2021-05-09 14h59m47s"
   path_out: "\\preprocessed"
   processPool: 32
   chunk_res: [256,256]
