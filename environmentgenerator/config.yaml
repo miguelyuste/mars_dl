@@ -9,8 +9,8 @@ fitgroundplane:
   malloc_discard_instances: 0.95
   malloc_step: 0.01
 blenderprocessor:
-  path_in: 'E:\TFM\Bakeoff 2020\CART'
-  path_out: "E:/TFM/Blender Processor Results/"
+  path_in: "E:\\Joanneum Research - Storage\\Mars-DL - Storage\\Datasets\\Bakeoff 2020\\CART"
+  path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\debug_light"
 psganpreprocess:
   path_in: "E:\\TFM\\Blender Processor Results\\2020-11-23 21h49m36s"
   path_out: "\\preprocessed"
@@ -18,7 +18,7 @@ psganpreprocess:
   chunk_res: [256,256]
   max_empty: 0.001
 obj_converter:
-  path_in: 'F:\\TFM\\SGAN Results'
+  path_in: 'E:\Master Thesis - Storage\SGAN Results\Complete\debug'
   psgan_output_size: 512
   padding_psgan: 2
   is_image: false

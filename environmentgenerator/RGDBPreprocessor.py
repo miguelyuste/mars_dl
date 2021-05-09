@@ -66,7 +66,7 @@ if __name__ == '__main__':
         os.makedirs(path_out)
 
     # concurrently process images
-    Parallel(n_jobs=config['processPool'], backend="loky")(
+    Parallel(n_jobs=-1, backend="loky")(
         map(delayed(preprocess_rbgd), (file for file in
                                        tqdm(glob(path_in + "/*.npy"),
                                             desc="Preprocessing RGBD images"))))
