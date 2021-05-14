@@ -45,8 +45,8 @@ def preprocess_rbgd(image_filepath):
         percentage_empty = 100 * (empty_pixel_count / total_pixel_count)
         # discard if a big part of the tile is empty
         if percentage_empty < config['max_empty']:
-            # discard if the texture is colourless
-            if np.mean(chunk[:,:,:3]*255).astype(int) > 10:
+            # discard if the texture is not colourful enough
+            if np.mean(chunk[:,:,:3]*255).astype(int) > 100:
                 #outfile = Image.fromarray(chunk, 'RGBA')
                 #outfile.save(path_out + "/" + Path(image_filepath).stem + f"_{i}.png")
                 np.save(str(path_out + "/" + Path(image_filepath).stem + f"_{i}.npy"),chunk.astype(np.float32))
@@ -59,13 +59,13 @@ if __name__ == '__main__':
     with open("config.yaml") as f:
         config = load(f, Loader=FullLoader)
     config = config['psganpreprocess']
-    path_in = config['path_in']
-    path_out = path_in + config['path_out'] + "_empty=" + str(config['max_empty'])
     chunk_resolution = config['chunk_res']
+    path_in = config['path_in']
+    path_out = path_in + config['path_out'] + "_empty=" + str(config['max_empty']) + "_res=" + str(chunk_resolution[0])
 
     # create output path if it doesn't exist
     if not os.path.exists(path_out):
-        print(f"Output folder created: {config['path_out']}")
+        print(f"Output folder created: {path_out}")
         os.makedirs(path_out)
 
     # concurrently process images

@@ -60,7 +60,7 @@ def to_obj(tile, outfile):
         mu = -mu
     sigma = np.std(z)
     ######## TODO: uncomment this (or not - this sets all values to one!)
-    inliers_idx = np.abs(z - mu) < 1.5*sigma
+    inliers_idx = np.abs(z - mu) < 2*sigma
     #inliers_idx = np.ones(z.shape, np.bool)
     TOTAL_POINTS = (tile.shape[0] * tile.shape[1])
     num_outliers = TOTAL_POINTS - inliers_idx.sum()
