@@ -49,6 +49,10 @@ def preprocess_rbgd(image_filepath):
             if np.mean(chunk[:,:,:3]*255).astype(int) > 100:
                 #outfile = Image.fromarray(chunk, 'RGBA')
                 #outfile.save(path_out + "/" + Path(image_filepath).stem + f"_{i}.png")
+                # normalise depth values to [-1,1] using global and not sample max
+                chunk[:,:,3] = chunk[:,:,3]/50 - 1
+                # clip RGB values greater than 1 and then rescale to [-1,1]
+                chunk[:,:,:3] = np.clip(chunk[:,:,:3],0,1) * 2 - 1
                 np.save(str(path_out + "/" + Path(image_filepath).stem + f"_{i}.npy"),chunk.astype(np.float32))
 
 
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     # load script config
     with open("config.yaml") as f:
         config = load(f, Loader=FullLoader)
-    config = config['psganpreprocess']
+    config = config['sganpreprocess']
     chunk_resolution = config['chunk_res']
     path_in = config['path_in']
     path_out = path_in + config['path_out'] + "_empty=" + str(config['max_empty']) + "_res=" + str(chunk_resolution[0])

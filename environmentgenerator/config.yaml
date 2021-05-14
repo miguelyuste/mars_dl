@@ -11,10 +11,9 @@ fitgroundplane:
 blenderprocessor:
   path_in: "E:\\Master Thesis - Storage\\Training data - selected OBJs\\"
   path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\Training data - selected OBJs"
-psganpreprocess:
+sganpreprocess:
   path_in: 'E:\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs2021-05-10 20h08m44s'
-  path_out: "\\preprocessed"
-  processPool: 32
+  path_out: "\\depthColourFixed"
   chunk_res: [512,512]
   max_empty: 5.0
 obj_converter:
@@ -22,3 +21,6 @@ obj_converter:
   psgan_output_size: 256
   padding_psgan: 2
   is_image: false
+sigma_calculator:
+  path_in: 'E:\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'
+  path_out: 'E:\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'

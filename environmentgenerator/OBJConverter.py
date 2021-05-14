@@ -43,8 +43,11 @@ def to_obj(tile, outfile):
     # TODO: z has values in [-1,1]. What do the negative values represent?
 
 
-    rgb = (tile[...,:3] / 2) + 0.5 # tile has values in [-1,1], map RGB to [0,1]
-    z = tile[:, :, 3]
+    # fetch rgb and depth values and undo normalisation
+    rgb = (tile[...,:3] / 2) + 0.5
+    z = (tile[:, :, 3]+1)*50
+
+    # apply smoothing filters
     z = median_filter(z, size=10)
     z = gaussian_filter(z, sigma=0.5)
     # Todo:interpolation necessary?
@@ -60,6 +63,9 @@ def to_obj(tile, outfile):
         mu = -mu
     sigma = np.std(z)
     ######## TODO: uncomment this (or not - this sets all values to one!)
+
+    ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
+    ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
     inliers_idx = np.abs(z - mu) < 2*sigma
     #inliers_idx = np.ones(z.shape, np.bool)
     TOTAL_POINTS = (tile.shape[0] * tile.shape[1])
