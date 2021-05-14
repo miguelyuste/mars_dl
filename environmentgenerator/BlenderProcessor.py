@@ -1,8 +1,8 @@
 from yaml import load, FullLoader
 from skspatial.objects import Points, Plane
-from skspatial.plotting import plot_3d
+#from skspatial.plotting import plot_3d
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 import bpy
 import mathutils
@@ -12,7 +12,7 @@ from pathlib import Path
 from sklearn.decomposition import PCA
 import logging
 import datetime
-from PIL import Image
+#from PIL import Image
 
 
 def unit_vector(vector):
@@ -123,7 +123,7 @@ def get_distancemap_rgbimage():
     rgb_image = np.reshape(rgb_image, (1080, 1920, 4))
     rgb_image = rgb_image[:, :, 0:3]
     rgb_image = np.flipud(rgb_image)
-    #rgb_image = reverse_mapping(rgb_image) # <- Likely wrong, it makes sense for depth, NOT for RGB data.
+    # rgb_image = reverse_mapping(rgb_image) # <- Likely wrong, it makes sense for depth, NOT for RGB data.
 
     return distance_map, rgb_image
 
@@ -190,6 +190,10 @@ def process_obj(filepath):
     camera.rotation_euler = (rot_quat @ camera_roll).to_euler()
     # close up on object (fit entire object into view)
     bpy.ops.view3d.camera_to_view_selected()
+
+    # change light location
+    light_object.location = camera.location
+
     # get distance to camera and RGB values
     logger.info("Calling get_distancemap_rgbimage()")
     distance_map, rgb_image = get_distancemap_rgbimage()
@@ -206,9 +210,9 @@ def process_obj(filepath):
     rgbd_image = np.concatenate([rgb_image, depth_map[..., None]], axis=-1)
     logger.info("Saving outfile")
     print("Saving output file")
-    np.save(str(path_out + "/" + Path(filepath).stem + ".npy"),rgbd_image.astype(np.float32))
-    #outfile = Image.fromarray(rgbd_image, 'RGBA')
-    #outfile.save(path_out + "/" + Path(filepath).stem + ".png")
+    np.save(str(path_out + "/" + Path(filepath).stem + ".npy"), rgbd_image.astype(np.float32))
+    # outfile = Image.fromarray(rgbd_image, 'RGBA')
+    # outfile.save(path_out + "/" + Path(filepath).stem + ".png")
 
 
 if __name__ == '__main__':
@@ -220,6 +224,7 @@ if __name__ == '__main__':
         config = load(f, Loader=FullLoader)
     path_in = config['blenderprocessor']['path_in']
     path_out = config['blenderprocessor']['path_out'] + datetime.datetime.now().strftime("%Y-%m-%d %Hh%Mm%Ss")
+    # path_out = config['blenderprocessor']['path_out'] + "debugging"
     # create output path if it doesn't exist
     if not os.path.exists(path_out):
         os.makedirs(path_out)
@@ -249,6 +254,21 @@ if __name__ == '__main__':
     print("Initial scene cleanup...")
     delete_scene_objects()
     print("Commencing data extraction...")
+
+    # add lighting
+    logger.info("Adding lighting")
+    # create light datablock, set attributes
+    light_data = bpy.data.lights.new(name="light_2.80", type='POINT')
+    light_data.energy = 100
+
+    # create new object with our light datablock
+    light_object = bpy.data.objects.new(name="light_2.80", object_data=light_data)
+
+    # link light object
+    bpy.context.collection.objects.link(light_object)
+
+    # make it active
+    bpy.context.view_layer.objects.active = light_object
 
     # launch OBJ processing
     errors = 0
