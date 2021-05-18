@@ -51,7 +51,8 @@ if __name__ == '__main__':
     try:
         # do initial crop
         initial_crop = input_file[:initial_crop_size,:initial_crop_size, :]
-
+        print(initial_crop[:,:,3].max(), initial_crop[:,:,3].min())
+        initial_crop[:, :, 3] = (initial_crop[:,:,3]-initial_crop[:,:,3].min())/(initial_crop[:,:,3].max() - initial_crop[:,:,3].min()) - 0.5
         # do random crops
         for i in range(no_crops):
             idx_x = np.random.randint(0, initial_crop_size-random_crop_size-1)
