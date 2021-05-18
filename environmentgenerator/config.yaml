@@ -13,9 +13,10 @@ blenderprocessor:
   path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\Training data - selected OBJs"
 sganpreprocess:
   path_in: 'E:\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs2021-05-10 20h08m44s'
-  path_out: "\\depthColourFixed"
-  chunk_res: [512,512]
-  max_empty: 5.0
+  path_out: '\final_dataset'
+  max_empty: 0
+  random_crop_size: 128
+  no_crops: 16
 obj_converter:
   path_in: 'E:\Master Thesis - Storage\SGAN Results\Complete\EnvGen_colourFixed\crops_rescaled\wgan'
   vmax: -0.9835078
