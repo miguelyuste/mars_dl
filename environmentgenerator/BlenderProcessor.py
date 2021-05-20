@@ -121,6 +121,7 @@ def get_distancemap_rgbimage():
 
     # todo: if camera resolution can be tweaked, this can be parametrised
     rgb_image = np.reshape(rgb_image, (1080, 1920, 4))
+    # keep only rgb channels, alpha not needed
     rgb_image = rgb_image[:, :, 0:3]
     rgb_image = np.flipud(rgb_image)
     # rgb_image = reverse_mapping(rgb_image) # <- Likely wrong, it makes sense for depth, NOT for RGB data.

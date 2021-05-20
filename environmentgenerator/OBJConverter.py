@@ -13,8 +13,8 @@ from scipy.ndimage.filters import gaussian_filter, median_filter
 import sys
 
 # focal length from camera intrinsic matrix (obtained from Blender)
-f_x = 2666.665
-f_y = 2666.665
+F_X = 2666.665
+F_Y = 2666.665
 
 
 # undo distance to depth conversion to avoid fish-eye effect
@@ -36,32 +36,57 @@ def undo_conversion(depth_map, camera_fov=50.7):
 
     return dist_map
 
+def get_points(d):
+    # calculate camera center
+    im_h, im_w = d.shape[:2]
+    image_center_x = im_w / 2
+    image_center_y = im_h / 2
+    # calculate camera intrinsic matrix for projection of points
+    K = np.eye(3)
+    K[0, 0] = 1 / F_X
+    K[1, 1] = 1 / F_Y
+    K[0, 2] = -image_center_x / F_X
+    K[1, 2] = -image_center_y / F_Y
+    # points projection
+    uv = np.ones([3, im_h, im_w])
+    uv[:2,...] = np.mgrid[:im_h,:im_w]
+    uv = uv.reshape([3,-1])
+    M = (K @ uv).reshape([-1,im_h,im_w])
+    # spherical distorsion correction ###TODO: perhaps not needed
+    norms = np.linalg.norm(M, axis=0)
+    return ((d/norms)*M)
+
 
 def to_obj(tile, outfile):
-    # todo: is this sigma okay?
+    # fetch rgb values and undo normalisation
+    rgb = (tile[...,:3] / 2) + 0.5
+    # undo rescaling to {-0.5,0.5}
+    d = tile[:, :, 3]
+    d = (d + 0.5) * (vmax - vmin) + vmin
+    d = (d + 1) * 50
 
-    # TODO: z has values in [-1,1]. What do the negative values represent?
-
-
-    rgb = (tile[...,:3] / 2) + 0.5 # tile has values in [-1,1], map RGB to [0,1]
-    z = tile[:, :, 3]
-    z = median_filter(z, size=10)
-    z = gaussian_filter(z, sigma=0.5)
+    # apply smoothing filters
+    d = median_filter(d, size=5)
+    d = gaussian_filter(d, sigma=0.5)
     # Todo:interpolation necessary?
     #z = np.interp(z, (z.min(), z.max()), (+0.5, +1))
     #
 
     ### OUTLIER FILTERING
     # Calculate outlier filtering parameters
-    mu = np.mean(z)
+    mu = np.mean(d)
     # If height values are mostly negative, invert sign
     if (mu < 0):
-        z = -z
+        d = -d
         mu = -mu
-    sigma = np.std(z)
+    sigma = np.std(d)
     ######## TODO: uncomment this (or not - this sets all values to one!)
-    inliers_idx = np.abs(z - mu) < 2*sigma
-    #inliers_idx = np.ones(z.shape, np.bool)
+
+    ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
+    ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
+    #inliers_idx = np.abs(z - mu) < 2*sigma
+    #inliers_idx = z < 2
+    inliers_idx = np.ones(d.shape, np.bool)
     TOTAL_POINTS = (tile.shape[0] * tile.shape[1])
     num_outliers = TOTAL_POINTS - inliers_idx.sum()
     MAX_OUTLIERS = 0.05 * TOTAL_POINTS
@@ -74,23 +99,30 @@ def to_obj(tile, outfile):
     #     print(f'Tile (mu={mu}, std={sigma}) contains {num_outliers} outliers, which is more than two times the treshold of max outliers({MAX_OUTLIERS}). Discarding tile.')
     #     return
 
-    if is_image:
-        z = undo_conversion(z)
+    ## TODO: check if fish eye effect is introduced by decoding
+    #if is_image:
+    #   z = undo_conversion(z)
 
+    ######### Replaced by get_points logic #########
     # Flatten z and project depth values to their 3D coordinates
     # two subarrays for x and y coord of length 1024x1024
-    idx = np.mgrid[:z.shape[0], :z.shape[1]].reshape([2, -1])
-    z = z.reshape([1, -1])
+    #idx = np.mgrid[:d.shape[0], :d.shape[1]].reshape([2, -1])
+    #d = d.reshape([1, -1])
 
     # todo: parametrise f_x and f_y
     # Directly calculate point coordinates without passing through matrix multiplication (this is more accurate)
-    C_alt = np.ones([4, idx.shape[1]])
-    C_alt[0, :] = z[0, :] * 1/f_x * idx[0, :]
-    C_alt[1, :] = z[0, :] * 1/f_y * idx[1, :]
-    C_alt[2, :] = z[0, :]
+    #C_alt = np.ones([4, idx.shape[1]])
+    #C_alt[0, :] = d[0, :] * 1/f_x * idx[0, :]
+    #C_alt[1, :] = d[0, :] * 1/f_y * idx[1, :]
+    #C_alt[2, :] = d[0, :]
+
+    #C_alt = undo_conversion(C_alt)
 
     # Reshape back to 2D image
-    C = C_alt.reshape([4, *tile.shape[:2]])
+    #C = C_alt.reshape([4, *tile.shape[:2]])
+    ######### Replaced by get_points logic #########
+
+    C = get_points(d)
 
     # Todo: are really all cases so extreme?
     # Build vertex index-coordinates map for later triangulation
@@ -219,6 +251,8 @@ if __name__ == '__main__':
     config = config['obj_converter']
     path_in = Path(config['path_in'])
     path_out = path_in / "obj/"
+    vmax = config['vmax']
+    vmin = config['vmin']
     psgan_output_size = config['psgan_output_size']
     padding_psgan = config['padding_psgan']
     is_image = config['is_image']
@@ -230,14 +264,17 @@ if __name__ == '__main__':
 
     # process texture mosaics
     #to_process = [file for file in glob(path_in + "**/*.npy")]
+    print("Searching for Numpy files in input path...")
     to_process = [file.relative_to(path_in) for file in path_in.glob("**/*.npy")]
-    #for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"):
-    #    process_mosaic(mosaic_path)
 
-    try:
-        Parallel(n_jobs=-1, backend="loky")(
-            map(delayed(process_mosaic), (mosaic_path for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"))))
-    except Exception as e:
-        print("Exception while concurrently processing SGAN results: " + repr(e))
+    if len(to_process) == 0:
+        print("Found no Numpy files in recursive search of input folder. Terminating execution.")
+    else:
+        print(f"Processing {str(len(to_process))} Numpy files.")
+        try:
+            Parallel(n_jobs=-1, backend="loky")(
+                map(delayed(process_mosaic), (mosaic_path for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"))))
+        except Exception as e:
+            print("Exception while concurrently processing SGAN results: " + repr(e))
 
-    print("Dataset successfully processed.")
+        print("Dataset successfully processed.")
