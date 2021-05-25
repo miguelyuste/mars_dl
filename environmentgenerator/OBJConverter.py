@@ -54,12 +54,14 @@ def get_points(d):
     M = (K @ uv).reshape([-1,im_h,im_w])
     # spherical distorsion correction ###TODO: perhaps not needed
     norms = np.linalg.norm(M, axis=0)
-    return ((d/norms)*M)
+    # return xyz and uv points
+    return ((d/norms)*M), uv[:2,...]/np.array([[im_h],[im_w]])
 
 
 def to_obj(tile, outfile):
     # fetch rgb values and undo normalisation
     rgb = (tile[...,:3] / 2) + 0.5
+    rgb = median_filter(rgb, size=5)
     # undo rescaling to {-0.5,0.5}
     d = tile[:, :, 3]
     d = (d + 0.5) * (vmax - vmin) + vmin
@@ -67,10 +69,7 @@ def to_obj(tile, outfile):
 
     # apply smoothing filters
     d = median_filter(d, size=5)
-    d = gaussian_filter(d, sigma=0.5)
-    # Todo:interpolation necessary?
-    #z = np.interp(z, (z.min(), z.max()), (+0.5, +1))
-    #
+    #d = gaussian_filter(d, sigma=0.5)
 
     ### OUTLIER FILTERING
     # Calculate outlier filtering parameters
@@ -80,49 +79,14 @@ def to_obj(tile, outfile):
         d = -d
         mu = -mu
     sigma = np.std(d)
-    ######## TODO: uncomment this (or not - this sets all values to one!)
 
     ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
     ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
-    #inliers_idx = np.abs(z - mu) < 2*sigma
-    #inliers_idx = z < 2
-    inliers_idx = np.ones(d.shape, np.bool)
-    TOTAL_POINTS = (tile.shape[0] * tile.shape[1])
-    num_outliers = TOTAL_POINTS - inliers_idx.sum()
-    MAX_OUTLIERS = 0.05 * TOTAL_POINTS
-    # If there are many outliers, but within a reasonable treshold, keep tile and don't filter outliers
-    #if MAX_OUTLIERS <= num_outliers <= 2 * MAX_OUTLIERS:
-    #    print(
-    #        f'Skipping outliers filtering because there are {num_outliers} outliers (mu={mu}, std={sigma}, max outliers={MAX_OUTLIERS}).')
-    # If number of outliers > 2*max_outliers: discard tile
-    # elif num_outliers > 2*MAX_OUTLIERS:
-    #     print(f'Tile (mu={mu}, std={sigma}) contains {num_outliers} outliers, which is more than two times the treshold of max outliers({MAX_OUTLIERS}). Discarding tile.')
-    #     return
+    inliers_idx = np.abs(d - mu) < 2*sigma
+    #inliers_idx = d < 1
+    #inliers_idx = np.ones(d.shape, np.bool)
 
-    ## TODO: check if fish eye effect is introduced by decoding
-    #if is_image:
-    #   z = undo_conversion(z)
-
-    ######### Replaced by get_points logic #########
-    # Flatten z and project depth values to their 3D coordinates
-    # two subarrays for x and y coord of length 1024x1024
-    #idx = np.mgrid[:d.shape[0], :d.shape[1]].reshape([2, -1])
-    #d = d.reshape([1, -1])
-
-    # todo: parametrise f_x and f_y
-    # Directly calculate point coordinates without passing through matrix multiplication (this is more accurate)
-    #C_alt = np.ones([4, idx.shape[1]])
-    #C_alt[0, :] = d[0, :] * 1/f_x * idx[0, :]
-    #C_alt[1, :] = d[0, :] * 1/f_y * idx[1, :]
-    #C_alt[2, :] = d[0, :]
-
-    #C_alt = undo_conversion(C_alt)
-
-    # Reshape back to 2D image
-    #C = C_alt.reshape([4, *tile.shape[:2]])
-    ######### Replaced by get_points logic #########
-
-    C = get_points(d)
+    points, texture_uv_coordinates = get_points(d)
 
     # Todo: are really all cases so extreme?
     # Build vertex index-coordinates map for later triangulation
@@ -135,7 +99,7 @@ def to_obj(tile, outfile):
         point_cloud = []
         for r in range(tile.shape[0]):
             for c in range(tile.shape[1]):
-                xyz = C[:3, r, c]
+                xyz = points[:3, r, c]
                 # Add and write vertex if it's an inlier or the number of outliers isn't above treshold
                 if inliers_idx[r,c]: #num_outliers >= MAX_OUTLIERS or
                     idx_map[(r,c)] = next_idx
@@ -145,8 +109,7 @@ def to_obj(tile, outfile):
 
         # Write texture vertices
         obj_file.write("\nusemtl material_0\n")
-        texture_coordinates = np.asarray(point_cloud)[...,:2] / np.asarray([tile.shape[:2]])
-        for uv in texture_coordinates:
+        for uv in texture_uv_coordinates.T:
             obj_file.write(f"vt {' '.join([np.format_float_positional(el, precision=19, trim='0') for el in uv])}\n")
 
         # Triangulate and write faces
@@ -270,7 +233,7 @@ if __name__ == '__main__':
     if len(to_process) == 0:
         print("Found no Numpy files in recursive search of input folder. Terminating execution.")
     else:
-        print(f"Processing {str(len(to_process))} Numpy files.")
+        print(f"Processing {str(len(to_process))} Numpy file(s).")
         try:
             Parallel(n_jobs=-1, backend="loky")(
                 map(delayed(process_mosaic), (mosaic_path for mosaic_path in tqdm(to_process, desc="Converting SGAN results into OBJ format"))))
