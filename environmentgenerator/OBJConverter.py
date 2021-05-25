@@ -52,24 +52,24 @@ def get_points(d):
     uv[:2,...] = np.mgrid[:im_h,:im_w]
     uv = uv.reshape([3,-1])
     M = (K @ uv).reshape([-1,im_h,im_w])
-    # spherical distorsion correction ###TODO: perhaps not needed
-    norms = np.linalg.norm(M, axis=0)
-    # return xyz and uv points
-    return ((d/norms)*M), uv[:2,...]/np.array([[im_h],[im_w]])
+    # return xyz and uv points)
+    return (d*M), uv[:2,...]/np.array([[im_h],[im_w]])
 
 
 def to_obj(tile, outfile):
     # fetch rgb values and undo normalisation
     rgb = (tile[...,:3] / 2) + 0.5
-    rgb = median_filter(rgb, size=5)
-    # undo rescaling to {-0.5,0.5}
+    # get height values and undo rescaling to {-0.5,0.5}
     d = tile[:, :, 3]
     d = (d + 0.5) * (vmax - vmin) + vmin
     d = (d + 1) * 50
 
     # apply smoothing filters
     d = median_filter(d, size=5)
-    #d = gaussian_filter(d, sigma=0.5)
+    d = gaussian_filter(d, sigma=0.5)
+    rgb[:,:,0] = median_filter(rgb[:,:,0], size=20)
+    rgb[:,:,1] = median_filter(rgb[:,:,1], size=20)
+    rgb[:,:,2] = median_filter(rgb[:,:,2], size=20)
 
     ### OUTLIER FILTERING
     # Calculate outlier filtering parameters
@@ -82,8 +82,8 @@ def to_obj(tile, outfile):
 
     ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
     ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
-    inliers_idx = np.abs(d - mu) < 2*sigma
-    #inliers_idx = d < 1
+    #inliers_idx = np.abs(d - mu) < 2*sigma
+    inliers_idx = d < 1
     #inliers_idx = np.ones(d.shape, np.bool)
 
     points, texture_uv_coordinates = get_points(d)
