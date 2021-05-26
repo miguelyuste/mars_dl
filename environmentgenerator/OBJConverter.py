@@ -53,7 +53,7 @@ def get_points(d):
     uv = uv.reshape([3,-1])
     M = (K @ uv).reshape([-1,im_h,im_w])
     # return xyz and uv points)
-    return (d*M), uv[:2,...]/np.array([[im_h],[im_w]])
+    return d*M, uv[:2,...]/np.array([[im_h],[im_w]])
 
 
 def to_obj(tile, outfile):
@@ -65,7 +65,7 @@ def to_obj(tile, outfile):
     d = (d + 1) * 50
 
     # apply smoothing filters
-    d = median_filter(d, size=5)
+    d = median_filter(d, size=10)
     d = gaussian_filter(d, sigma=0.5)
     rgb[:,:,0] = median_filter(rgb[:,:,0], size=20)
     rgb[:,:,1] = median_filter(rgb[:,:,1], size=20)
@@ -82,8 +82,8 @@ def to_obj(tile, outfile):
 
     ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
     ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
-    #inliers_idx = np.abs(d - mu) < 2*sigma
-    inliers_idx = d < 1
+    inliers_idx = np.abs(d - mu) < 2*sigma
+    #inliers_idx = d < 1
     #inliers_idx = np.ones(d.shape, np.bool)
 
     points, texture_uv_coordinates = get_points(d)
@@ -100,17 +100,19 @@ def to_obj(tile, outfile):
         for r in range(tile.shape[0]):
             for c in range(tile.shape[1]):
                 xyz = points[:3, r, c]
-                # Add and write vertex if it's an inlier or the number of outliers isn't above treshold
-                if inliers_idx[r,c]: #num_outliers >= MAX_OUTLIERS or
+                # Add and write vertex if it's an inlier
+                if inliers_idx[r,c]:
                     idx_map[(r,c)] = next_idx
                     next_idx += 1
                     point_cloud.append(xyz)
                     obj_file.write(f"v {' '.join([np.format_float_positional(el, precision=19, trim='0') for el in xyz])}\n")
 
-        # Write texture vertices
+        # Write texture vertices if point is an inlier
         obj_file.write("\nusemtl material_0\n")
-        for uv in texture_uv_coordinates.T:
-            obj_file.write(f"vt {' '.join([np.format_float_positional(el, precision=19, trim='0') for el in uv])}\n")
+        for i,uv in enumerate(texture_uv_coordinates.T):
+            r, c = np.unravel_index(i,points.shape[1:])
+            if inliers_idx[r,c]:
+                obj_file.write(f"vt {' '.join([np.format_float_positional(el, precision=19, trim='0') for el in uv])}\n")
 
         # Triangulate and write faces
         obj_file.write("\n")
