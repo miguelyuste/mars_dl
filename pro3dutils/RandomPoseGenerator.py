@@ -6,7 +6,7 @@ import numpy as np
 import argparse
 from copy import deepcopy
 import yaml
-from math import radians
+import math
 from scipy.spatial.transform import Rotation as R
 
 # JSON outfile header with default PRo3D params
@@ -69,7 +69,7 @@ def sample_spherical(npoints, radius, obj, ndim=3):
     forwards = forwards + up_vector[:, None]
     # rotate forward vector downwards
     normals = np.cross(forwards.T, up_vector[:, None].T)
-    theta = np.asarray([radians(objects['rotation'])])
+    theta = np.asarray([math.radians(objects['rotation'])])
     rot_vec = (normals/np.linalg.norm(normals, axis=-1)[...,None])*theta[...,None]
     r = R.from_rotvec(rot_vec)
     forwards = r.apply(forwards.T)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
         out_dict['fieldOfView'] = args.fieldofview
 
     # load object config file
-    with open('snapshotutils/config.yaml') as f:
+    with open('pro3dutils/config.yaml') as f:
         objects = yaml.load(f, Loader=yaml.FullLoader)
 
     # produce snapshots and store them

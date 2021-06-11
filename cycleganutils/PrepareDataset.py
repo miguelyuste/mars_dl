@@ -38,8 +38,8 @@ def find_files():
 def resize_image(image):
     if image.size[0] > args.resolution and image.size[1] > args.resolution:
         image.resize((args.resolution, args.resolution))
-    elif True:
-        a = 1
+    else:
+        raise Exception("Image isn't large enough")
 
 
 def process_image_pair(paths, pair, file_list_len):

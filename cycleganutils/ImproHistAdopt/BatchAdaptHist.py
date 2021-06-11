@@ -23,13 +23,13 @@ def run_adjust(file):
         image = Image.open(file).convert("RGB")
         image.save(Path(file).with_suffix(".jpg"))
         # run script on JPG infile
-        out_folder = args.output+"/"+Path(file).parent.name
+        out_folder = args.output + "/" + Path(file).parent.name
         try:
             os.makedirs(out_folder, exist_ok=True)
         except OSError as exc:  # Guard against race condition
             print(exc)
         outfile_jpg = out_folder + "/" + Path(file).stem + "_corrected.jpg"
-        subprocess.run(["HistAdopt.exe", "Ref.jpg", f"{infile_jpg}", f"{outfile_jpg}"])
+        subprocess.run(["HistAdopt.exe", f"{args.reference_image}", f"{infile_jpg}", f"{outfile_jpg}"])
         # delete JPG infile
         os.remove(infile_jpg)
         # convert outfile to PNG
@@ -47,8 +47,8 @@ if __name__ == '__main__':
     # parser.add_argument("-p", "--path", help="Path to script", required=True)
     parser.add_argument("-i", "--input",
                         help="path to input folder", required=True)
-    # parser.add_argument("-r", "--reference_image",
-    #                        help="path to reference image", required=True)
+    parser.add_argument("-r", "--reference_image",
+                        help="path to reference image", required=True)
     parser.add_argument("-o", "--output",
                         help="path to folder where to place the processed images", required=True)
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     files = [file for file in glob(args.input + '/**/*.png', recursive=True) if
              "mask" not in file and "depth" not in file]
 
-    Parallel(n_jobs=16, backend="loky")(
+    Parallel(n_jobs=-1, backend="loky")(
         map(delayed(run_adjust), (file for file in tqdm(files, desc="Processing images"))))
 
     print("All images processed.")

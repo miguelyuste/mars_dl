@@ -1,17 +1,14 @@
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 import os
-
+import argparse
 from PIL import Image
-
-# Todo: move these to config
-path_in = "D:\\Datasets\\Label-Mars\\NOAH-SSL-DB-001-DB1 Annotations and Images\\"
-path_out = "D:\\Datasets\\Label-Mars\\NOAH-SSL-DB-001-DB1 Annotations and Images\\images_clean"
 
 
 def filter_artificial(path_in, path_out):
     processed = 0
-    for filename in tqdm(os.listdir(path_in + "/annotations"), desc='Filtering out pictures containing artificial objects:'):
+    for filename in tqdm(os.listdir(path_in + "/annotations"),
+                         desc='Filtering out pictures containing artificial objects:'):
         with open(path_in + "/annotations/" + filename, 'r') as annotations:
             data = annotations.read()
             soup = BeautifulSoup(data, 'xml')
@@ -31,6 +28,15 @@ def filter_artificial(path_in, path_out):
 
 
 if __name__ == '__main__':
-    if not os.path.exists(path_out):
-        os.makedirs(path_out)
-    print("Total number clean pictures: {}".format(filter_artificial(path_in, path_out)))
+    # read arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("path_in", help="Path to LabelMars dataset")
+    parser.add_argument("path_out", help="Path to output folder")
+    args = parser.parse_args()
+
+    # create output folder if it doesn't exist yet
+    if not os.path.exists(args.path_out):
+        os.makedirs(args.path_out)
+
+    # do filtering and print out
+    print("Total number clean pictures: {}".format(filter_artificial(args.path_in, args.path_out)))
