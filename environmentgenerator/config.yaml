@@ -13,6 +13,7 @@ blenderprocessor:
   path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\Training data - selected OBJs - Light reduced - 40"
 blendersnapshots:
   path_out: "E:\\Master Thesis - Storage\\Blender Snapshot Results\\First attempt"
+  no_snaps: 1000
   coordinates:
     upper_x: 8.0385
     lower_x: -7.9255
