@@ -9,38 +9,38 @@ fitgroundplane:
   malloc_discard_instances: 0.95
   malloc_step: 0.01
 blenderprocessor:
-  path_in: "E:\\Master Thesis - Storage\\Training data - selected OBJs\\"
-  path_out: "E:\\Master Thesis - Storage\\Blender Processor Results\\Training data - selected OBJs - Light reduced - 40"
+  path_in: "F:\\Storage\\Master Thesis - Storage\\Training data - selected OBJs\\"
+  path_out: "F:\\Storage\\Master Thesis - Storage\\Blender Processor Results\\Training data - selected OBJs - Sun try"
 blendersnapshots:
-  path_out: "E:\\Master Thesis - Storage\\Blender Snapshot Results\\First attempt"
+  path_out: "F:\\Storage\\Master Thesis - Storage\\Blender Snapshot Results\\First attempt"
   no_snaps: 1000
   coordinates:
     upper_x: 8.0385
     lower_x: -7.9255
-    upper_y: -82.557
-    lower_y: -84.063
+    upper_y: -84.557
+    lower_y: -82.063
     upper_z: 7.9429
     lower_z: -8.0700
 sganpreprocess:
-  path_in: 'E:\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs - Light reduced - 40_2021-06-25 00h00m23s'
+  path_in: 'F:\Storage\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs - Sun try - 40_2021-06-25 00h00m23s'
   path_out: 'preprocessed_global_average'
   max_empty: 0
   min_colour_value: 50
   random_crop_size: 512
   no_crops: 32
 obj_converter:
-  path_in: 'E:\Master Thesis - Storage\SGAN Results\Complete\Training data - selected OBJs - Light reduced - 40\wgan'
+  path_in: 'F:\Storage\Master Thesis - Storage\SGAN Results\Complete\crops\wgan'
   vmax: 1.0983668565750122
   vmin: 1.0258113145828247
   psgan_output_size: 512
   padding_psgan: 2
   is_image: false
 sigma_calculator:
-  path_in: 'E:\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'
-  path_out: 'E:\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'
+  path_in: 'F:\Storage\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'
+  path_out: 'F:\Storage\Master Thesis - Storage\Blender Processor Results\debug_light2021-05-09 21h08m00s'
 random_crops:
-  file_in: 'E:\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs2021-05-10 20h08m44s\T000_P060_C000.npy'
-  path_out: 'E:\Master Thesis - Storage\Blender Processor Results\final_random_crop'
+  file_in: 'F:\Storage\Master Thesis - Storage\Blender Processor Results\Training data - selected OBJs2021-05-10 20h08m44s\T000_P060_C000.npy'
+  path_out: 'F:\Storage\Master Thesis - Storage\Blender Processor Results\final_random_crop'
   initial_crop_size: 0
   random_crop_size: 512
   no_crops: 64

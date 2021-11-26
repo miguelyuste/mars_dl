@@ -41,18 +41,25 @@ def get_points(d):
     im_h, im_w = d.shape[:2]
     image_center_x = im_w / 2
     image_center_y = im_h / 2
-    # calculate camera intrinsic matrix for projection of points
+    # calculate camera intrinsic matrix
     K = np.eye(3)
     K[0, 0] = 1 / F_X
     K[1, 1] = 1 / F_Y
     K[0, 2] = -image_center_x / F_X
     K[1, 2] = -image_center_y / F_Y
-    # points projection
+    # CALCULATE PROJECTION MATRIX
+    # we first create an empty uv matrix of dimension [width][height][3], where the last 3rd dimension is just full of ones
     uv = np.ones([3, im_h, im_w])
+    # first two dimensions: meshgrid returns array of specified shape where each cell contains its explicit coordinates (coordinates of each pixel of a 2D plane)
     uv[:2,...] = np.mgrid[:im_h,:im_w]
+    # you now flatten it so that it has three rows (xyz) and however many columns as pixels you have so that you can do a matmul with the camera intrinsic matrix
+    # the x value is u, the y value is v, the z value is 1
     uv = uv.reshape([3,-1])
+    # now we can finally calculate the projection matrix
+    # reshape to return to [3,width,height] shape
     M = (K @ uv).reshape([-1,im_h,im_w])
-    # return xyz and uv points)
+    # return projected xyz point cloud and texture [0,1] uv points
+    # uv division turns the integer coordinates in proper ([0,1],[0,1]) uv coordinates
     return d*M, uv[:2,...]/np.array([[im_h],[im_w]])
 
 
@@ -82,8 +89,8 @@ def to_obj(tile, outfile):
 
     ##### TODO IDEA: FILTER OUT DEPTHS GREATER THAN 40
     ###### TODO ALSO: DEPTH DATA MIGHT BE INVERTED
-    inliers_idx = np.abs(d - mu) < 2*sigma
-    #inliers_idx = d < 1
+    #inliers_idx = np.abs(d - mu) < 2*sigma
+    inliers_idx = d > 40
     #inliers_idx = np.ones(d.shape, np.bool)
 
     points, texture_uv_coordinates = get_points(d)
