@@ -83,7 +83,7 @@ def fit_plane(vertices):
 
     return plane
 
-
+# cast values to 0-100 for network input
 def reverse_mapping(array, from_min=0, from_max=1, to_min=0.1, to_max=100):
     slope = (to_max - to_min) / (from_max - from_min)
     return to_min + slope * (array - from_min)

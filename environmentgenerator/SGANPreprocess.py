@@ -18,8 +18,8 @@ def random_crops(image_filepath):
         image = np.load(image_filepath)
         # we'll count the number of valid crops we get and store their vmax and vmin
         valid_crops = 0
-        # do until we have enough crops or we've made (10 * target number of crops) attempts
-        for i in range(no_crops * 10):
+        # do until we have enough crops or we've made (100 * target number of crops) attempts
+        for i in range(no_crops * 100):
             # random crop of image
             idx_x = np.random.randint(0, image.shape[0] - random_crop_size - 1)
             idx_y = np.random.randint(0, image.shape[1] - random_crop_size - 1)
@@ -31,7 +31,7 @@ def random_crops(image_filepath):
             # discard if a big part of the tile is empty
             if percentage_empty <= config['max_empty']:
                 # discard if the texture is not colourful enough
-                if np.mean(crop[:, :, :3] * 255).astype(int) > 100:
+                if np.mean(crop[:, :, :3] * 255).astype(int) > config['min_colour_value']:
                     # save crop
                     crop_filepath = str(path_out + "/" + Path(image_filepath).stem + f"_{i}.npy")
                     np.save(crop_filepath, crop.astype(np.float32))
@@ -57,7 +57,8 @@ def normalise(crop_path):
     try:
         crop = np.load(crop_path)
         # normalise depth values to {-0.5,0.5}
-        crop[:, :, 3] = (crop[:, :, 3] - avg_vmin) / (avg_vmax - avg_vmin) - 0.5
+        crop[:, :, 3] = (crop[:, :, 3] - avg_vmin) / (avg_vmax - avg_vmin) -0.5
+        #crop[:, :, 3] = (crop[:, :, 3] - all_v_parameters.min()) / (all_v_parameters.max() - all_v_parameters.min()) - 0.5
         # clip RGB values greater than 1 and then normalise to {-1,1}
         crop[:, :, :3] = np.clip(crop[:, :, :3], 0, 1) * 2 - 1
         # save normalised crop
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     path_in = config['path_in']
     random_crop_size = config['random_crop_size']
     no_crops = config['no_crops']
-    path_out = path_in + config['path_out'] + "_empty=" + str(config['max_empty']) + "_res=" + str(random_crop_size)
+    path_out = path_in + "/" + config['path_out'] + "_empty=" + str(config['max_empty']) + "_res=" + str(random_crop_size)
 
     # create output path if it doesn't exist
     if not os.path.exists(path_out):
@@ -99,7 +100,12 @@ if __name__ == '__main__':
         # calculate average max and min of crops
         avg_vmax = np.average(all_v_parameters[:, 0])
         avg_vmin = np.average(all_v_parameters[:, 1])
-        print(f"Average parameters of crop dataset: vmax={avg_vmax}, vmin={avg_vmin}")
+        v_params = f"Average parameters of crop dataset: vmax={avg_vmax}, vmin={avg_vmin}"
+        print(v_params)
+        # save txt file with vmax and vmin for easy access
+        vparams_txt = open(str(path_out + "/v_params.txt"),"w")
+        vparams_txt.write(v_params)
+        vparams_txt.close()
         # save individual vmax and vmin values for later reference
         np.save(str(path_out + "/all_v_params.npy"), all_v_parameters)
         # reload crops and do normalisation
